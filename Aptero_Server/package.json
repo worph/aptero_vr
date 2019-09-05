@@ -1,0 +1,18 @@
+{
+  "name": "Aptero_Server",
+  "version": "0.0.0",
+  "homepage": "https://aptero.co",
+  "description": "VR chat using WebRTC and PeerJS",
+  "main": "src/index.js",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "~4.10.2",
+    "uuid": "~2.0.1"
+  },
+  "scripts": {
+    "start": "node src/"
+  },
+  "devDependencies": {},
+  "author": "Pierre-Henri FRICOT",
+  "license": "MIT"
+}
