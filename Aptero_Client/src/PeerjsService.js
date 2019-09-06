@@ -1,6 +1,7 @@
 // Handle prefixed versions
 import axios from 'axios';
 import $ from "jquery";
+import EventEmitter from 'eventemitter3';
 
 navigator.getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
 
@@ -9,8 +10,10 @@ interface Peer {
     incoming: any,
     connection: any,
 }
-export class PeerJsService {
+
+export class PeerjsService {
     APIHost: string;
+    eventEmitter = new EventEmitter();
     // State
     peerjs = {};
     myStream;
@@ -43,6 +46,16 @@ export class PeerJsService {
         await this.getLocalAudioStream();
         await this.connectToPeerJS();
         await this.registerIdWithServerAPI(this.peerjs.id);
+        this.peerjs.on('connection', (conn) => {
+            let id = conn.peer;
+            this.getPeer(id).connection = conn;
+            conn.on('open', () => {
+                console.log('data state connected to: ' + id);
+                conn.on('data', (data) => {
+                    this.processRequest(data);
+                });
+            });
+        });
         if (this.call.peers.length) {
             this.callPeers();
             return false;
@@ -52,13 +65,15 @@ export class PeerJsService {
         }
     }
 
-    sendDataPlayerData(position: [], quaternion: []) {
-
-        this.getPeer(peerId).connection.send({
-            id: "player_state",
-            data: {
-                position: position,
-                quaternion: quaternion
+    broadcastData(event,data:any) {
+        Object.keys(this.peers).forEach((peerId) => {
+            if(peerId!==this.peerjs.id) {
+                if (this.getPeer(peerId).connection) {
+                    this.getPeer(peerId).connection.send({
+                        event: event,
+                        data: data
+                    });
+                }
             }
         });
     }
@@ -87,7 +102,7 @@ export class PeerJsService {
         return res;
     }
 
-    // Add our ID to the list of PeerJS IDs for this this.call
+    // Add our ID to the list of PeerJS IDs for this call
     async createCallAPI(): Promise<any> {
         this.display('Registering ID with server...');
         return axios.get(this.APIHost + '/new').then(res => {
@@ -96,7 +111,7 @@ export class PeerJsService {
     }
 
 
-    // Add our ID to the list of PeerJS IDs for this this.call
+    // Add our ID to the list of PeerJS IDs for this call
     async getCallAPI(id: string): Promise<any> {
         this.display('Registering ID with server...');
         return axios.get(this.APIHost + '/' + id + ".json").then(res => {
@@ -104,13 +119,13 @@ export class PeerJsService {
         });
     }
 
-    // Add our ID to the list of PeerJS IDs for this this.call
+    // Add our ID to the list of PeerJS IDs for this call
     async registerIdWithServerAPI() {
         this.display('Registering ID with server...');
         return axios.post(this.APIHost + '/' + this.call.id + '/addpeer/' + this.peerjs.id);
     }
 
-    // Remove our ID from the this.call's list of IDs
+    // Remove our ID from the call's list of IDs
     async unregisterIdWithServerAPI() {
         return axios.post(this.APIHost + '/' + this.call.id + '/removepeer/' + this.peerjs.id);
     }
@@ -119,12 +134,11 @@ export class PeerJsService {
     callPeers() {
         this.call.peers.forEach((peerId) => {
             this.callPeer(peerId)
-            this.getPeer(peerId).connection = this.peerjs.connect(peerId)
-            this.getPeer(peerId).connection.on('open', function(){
-                // here you have conn.id
-                console.log('data state connected to'+peerId);
-            });
         });
+    }
+
+    processRequest(data: { event: string, data: any }) {
+        this.eventEmitter.emit(data.event, data);
     }
 
     callPeer(peerId) {
@@ -140,11 +154,20 @@ export class PeerJsService {
             this.display('Connected to ' + peerId + '.');
             this.addIncomingStream(peer, stream);
         });
+        let id = peer.id;
+        let conn = this.peerjs.connect(id);
+        this.getPeer(peer.id).connection = conn;
+        conn.on('open', () => {
+            console.log('data state connected to: ' + id);
+            conn.on('data', (data) => {
+                this.processRequest(data);
+            });
+        });
     }
 
-    // When someone initiates a this.call via PeerJS
+    // When someone initiates a call via PeerJS
     handleIncomingCall(incoming) {
-        this.display('Answering incoming this.call from ' + incoming.peer);
+        this.display('Answering incoming call from ' + incoming.peer);
         let peer = this.getPeer(incoming.peer);
         peer.incoming = incoming;
         incoming.answer(this.myStream);
@@ -153,12 +176,19 @@ export class PeerJsService {
         });
     }
 
-    // Add the new audio stream. Either from an incoming this.call, or
+    // Add the new audio stream. Either from an incoming call, or
     // from the response to one of our outgoing calls
     addIncomingStream(peer, stream) {
         this.display('Adding incoming stream from ' + peer.id);
         peer.incomingStream = stream;
         this.playStream(stream);
+
+        this.eventEmitter.emit("new_user", {
+            event: "new_user",
+            data: {
+                id: peer.id
+            }
+        });
     }
 
     // Create an <audio> element to play the audio stream
@@ -190,7 +220,7 @@ export class PeerJsService {
 
     ////////////////////////////////////
     // Helper functions
-    getPeer(peerId):Peer {
+    getPeer(peerId): Peer {
         return this.peers[peerId] || (this.peers[peerId] = {id: peerId});
     }
 

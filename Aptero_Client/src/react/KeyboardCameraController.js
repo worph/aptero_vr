@@ -1,11 +1,6 @@
-/**
- * Martin <i@martinpham.com>
- */
-
 import {Vector3, Quaternion} from 'three';
 
-
-const MOVING_SPEED = 1;
+const MOVING_SPEED = 0.01;
 
 class ObjectNotation {
     position = null;
