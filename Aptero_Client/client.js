@@ -12,6 +12,8 @@ import {PeerjsService} from "./src/PeerjsService";
 import * as THREE from 'three';
 import {ControllerService} from "./src/ControllerService";
 import type {ControllerState} from "./src/ControllerService";
+import {Paint3dDrawService} from "./src/Paint3dDrawService";
+import {POINT_RADIUS, RED} from "./src/Color";
 
 /*
  * Handle room connection
@@ -33,6 +35,9 @@ if (split.length === 2) {
 
 let FPS60 = 1000 / 60;
 let FPS24 = 1000 / 24;
+
+let MODE_DRAW = "draw";
+let MODE_ERASE = "erase";
 
 /*
  * init
@@ -83,12 +88,46 @@ function init(bundle, parent) {
             }),
             r360.getDefaultLocation()
         );
+        /*broadcast my points*/
+        paint3d.getAll().forEach(pointData => {
+            peerJsService.broadcastData("new_point", pointData);
+        })
+    });
+
+    peerJsService.eventEmitter.on("new_point", (event: {
+        event: string,
+        data: {
+            id: string
+        }
+    }) => {
+        let point = event.data;
+        paint3d.addPointIfNotPresent(point.x, point.y, point.z, POINT_RADIUS, point);
     });
 
 
     // Load the initial environment
     r360.compositor.setBackground(r360.getAssetURL('360WorldSun.jpg'));
     r360.controls.addCameraController(new KeyboardCameraController());
+
+    /* paint 3d */
+    let paint3d = new Paint3dDrawService();
+    paint3d.onPointAdded(data => {
+        r360.renderToLocation(
+            r360.createRoot("Point", {
+                id: data.id, x: data.x, y: data.y, z: data.z, color: data.color
+            }),
+            r360.getDefaultLocation()
+        );
+        if (data.origin === peerJsService.peerjs.id) {
+            //if we created the point we broadcast to others
+            peerJsService.broadcastData("new_point", data);
+        }
+    });
+    paint3d.onPointRemoved(data => {
+
+    });
+    let currentColor = RED;
+    let currentMode = MODE_DRAW;
 
     /*
     Input and hand processing
@@ -103,6 +142,7 @@ function init(bundle, parent) {
         }
         if (!knownHandIds[id][handId]) {
             knownHandIds[id][handId] = true;
+            console.log("new hand");
             r360.renderToLocation(
                 r360.createRoot("ParticipantHand", {
                     id: id, handId: handId, startVisible: true
@@ -123,6 +163,18 @@ function init(bundle, parent) {
         controllerService.getGamepads().forEach(gamepads => {
             let handId = gamepads.index;
             processHand(peerJsService.peerjs.id, handId, gamepads.getControllerState());
+            if (gamepads.isPressed()) {
+                let pos = gamepads.getPosition();
+                if (currentMode === MODE_DRAW) {
+                    paint3d.addPointIfNotPresent(pos[0], pos[1], pos[2], POINT_RADIUS, {
+                        id: paint3d.getNextUniqueId(),
+                        color: currentColor,
+                        origin: peerJsService.peerjs.id
+                    });
+                } else {
+                    paint3d.removePointNear(pos[0], pos[1], pos[2], POINT_RADIUS);
+                }
+            }
         })
     }, FPS60);
 
@@ -181,6 +233,7 @@ function init(bundle, parent) {
             hands: hands
         });
     }, FPS24);
+
 
 }
 

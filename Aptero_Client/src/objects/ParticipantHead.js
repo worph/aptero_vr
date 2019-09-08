@@ -47,7 +47,7 @@ export default class ParticipantHead extends React.Component<{ id: string, start
                             {rotateX: this.state.rotation[0]},
                             {rotateY: this.state.rotation[1]},
                             {rotateZ: this.state.rotation[2]},
-                            {scale: 0.1}
+                            {scale: 0.20}
                         ]
                     }}
                 />

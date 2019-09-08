@@ -52,7 +52,7 @@ export default class ParticipantHand extends React.Component<{ id: string, start
                             {rotateX: this.state.rotation[0]},
                             {rotateY: this.state.rotation[1]},
                             {rotateZ: this.state.rotation[2]},
-                            {scale: 0.01}
+                            {scale: 0.1}
                         ]
                     }}
                 />

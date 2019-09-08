@@ -76,12 +76,19 @@ export class ControllerService{
     constructor(){
         window.addEventListener('gamepadconnected', (e) => {
             let gamepad = e.gamepad;
+            console.log("gamepadconnected : ",gamepad)
             if (gamepad && gamepad.pose && gamepad.pose.orientation) {
                 this.controllers[e.gamepad.index] = new Controller(e.gamepad.index);
             }
         });
         window.addEventListener('gamepaddisconnected', (e) => {
             delete this.controllers[e.gamepad.index];
+        });
+        navigator.getGamepads().forEach(gamepad => {
+            console.log("gamepadconnected : ",gamepad)
+            if (gamepad && gamepad.pose && gamepad.pose.orientation) {
+                this.controllers[e.gamepad.index] = new Controller(e.gamepad.index);
+            }
         });
     }
 

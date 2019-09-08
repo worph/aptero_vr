@@ -2029,6 +2029,11 @@ currently-unhandled@^0.4.1:
   dependencies:
     array-find-index "^1.0.1"
 
+d3-octree@^0.1.4:
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/d3-octree/-/d3-octree-0.1.4.tgz#c3d6daf84f6b78fb11b38623e53b393e3a9276b0"
+  integrity sha512-FAvYzxYZtOjFJjsUUJMESGj4W6BF4QwqagwEJr+wUWm/gTWXtI+SDiz8wefBPxs6/PHaxvxgD8k6QXkOQcMlrg==
+
 dashdash@^1.12.0:
   version "1.14.1"
   resolved "https://registry.yarnpkg.com/dashdash/-/dashdash-1.14.1.tgz#853cfa0f7cbe2fed5de20326b8dd581035f6e2f0"
