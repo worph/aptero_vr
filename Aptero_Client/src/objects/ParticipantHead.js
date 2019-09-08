@@ -6,7 +6,7 @@ import {NativeModules} from 'react-360';
 const {ControllersModule} = NativeModules;
 import {browserBridge} from '../BrowserBridge';
 
-export default class Participant extends React.Component<{ id: string, startVisible: boolean}, {
+export default class ParticipantHead extends React.Component<{ id: string, startVisible: boolean}, {
     visible: boolean,
     position: [],
     quaternion: [],
@@ -18,7 +18,7 @@ export default class Participant extends React.Component<{ id: string, startVisi
     };
 
     componentDidMount(): void {
-        browserBridge.onEvent("setTransform",(data) => {
+        browserBridge.onEvent("setHeadTransform",(data) => {
             this.setTransform(data.position,data.rotation);
         });
     }
@@ -37,8 +37,8 @@ export default class Participant extends React.Component<{ id: string, startVisi
                 {this.state.visible &&
                 <Entity
                     source={{
-                        obj: asset('phface.obj'),
-                        mtl: asset('phface.mtl')
+                        obj: asset('head.obj'),
+                        mtl: asset('head.mtl')
                     }}
                     lit={true}
                     style={{

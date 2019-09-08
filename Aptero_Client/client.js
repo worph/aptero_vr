@@ -10,6 +10,8 @@ import {ReactInstance} from 'react-360-web';
 import KeyboardCameraController from "./src/react/KeyboardCameraController";
 import {PeerjsService} from "./src/PeerjsService";
 import * as THREE from 'three';
+import {ControllerService} from "./src/ControllerService";
+import type {ControllerState} from "./src/ControllerService";
 
 /*
  * Handle room connection
@@ -29,11 +31,17 @@ if (split.length === 2) {
     })
 }
 
+let FPS60 = 1000 / 60;
+let FPS24 = 1000 / 24;
+
 /*
  * init
  */
 function init(bundle, parent) {
-    let controllerModule;
+    /*
+    Init
+     */
+    let bridgeModule;
     const r360 = new ReactInstance(bundle, parent, {
         // Add custom options here
         fullScreen: true,
@@ -45,17 +53,17 @@ function init(bundle, parent) {
                 return controllerModule;
             },**/
             ctx => {
-                controllerModule = new BrowserBridgeNativeModule(ctx);
-                return controllerModule;
+                bridgeModule = new BrowserBridgeNativeModule(ctx);
+                return bridgeModule;
             }
         ]
     });
 
     // Render your app content to the default cylinder surface
-    /*r360.renderToSurface(
-      r360.createRoot('Menu360', { }),
-      r360.getDefaultSurface()
-    );*/
+    r360.renderToSurface(
+        r360.createRoot('Menu360', {}),
+        r360.getDefaultSurface()
+    );
 
     r360.renderToLocation(
         r360.createRoot('Env'),
@@ -69,45 +77,110 @@ function init(bundle, parent) {
         }
     }) => {
         let id = event.data.id;
-        console.log("display new user: " + id);
         r360.renderToLocation(
-            r360.createRoot("Participant", {
+            r360.createRoot("ParticipantHead", {
                 id: id, startVisible: true
             }),
             r360.getDefaultLocation()
         );
     });
 
+
+    // Load the initial environment
+    r360.compositor.setBackground(r360.getAssetURL('360WorldSun.jpg'));
+    r360.controls.addCameraController(new KeyboardCameraController());
+
+    /*
+    Input and hand processing
+     */
+
+    let controllerService = new ControllerService();
+    let knownHandIds: { [id: string]: { [id: number]: any } } = {};
+
+    function processHand(id: string, handId: number, data: ControllerState) {
+        if (!knownHandIds[id]) {
+            knownHandIds[id] = {};
+        }
+        if (!knownHandIds[id][handId]) {
+            knownHandIds[id][handId] = true;
+            r360.renderToLocation(
+                r360.createRoot("ParticipantHand", {
+                    id: id, handId: handId, startVisible: true
+                }),
+                r360.getDefaultLocation()
+            );
+        } else {
+            bridgeModule.emit("setHandTransform", {
+                id: id,
+                handId: handId,
+                ...data
+            })
+        }
+    }
+
+    //render loop at 60 FPS
+    setInterval(() => {
+        controllerService.getGamepads().forEach(gamepads => {
+            let handId = gamepads.index;
+            processHand(peerJsService.peerjs.id, handId, gamepads.getControllerState());
+        })
+    }, FPS60);
+
     peerJsService.eventEmitter.on("player_state", (event: {
         event: "player_state",
         data: {
             id: string,
             position: number[],
-            quaternion: number[]
+            rotation: number[],
+            hands: {
+                [id: number]: {
+                    position: number[],
+                    rotation: number[],
+                    pressed: boolean,
+                }
+            }
         }
     }) => {
         let id = event.data.id;
         let position = event.data.position;
         let rotation = event.data.rotation;
-        //controllerModule.setTransform(id,position, quaternion);
-        controllerModule.emit("setTransform",{id:id,position:position,rotation:rotation})
+        bridgeModule.emit("setHeadTransform", {id: id, position: position, rotation: rotation});
+        let hands = event.data.hands;
+        Object.keys(hands).forEach((handId) => {
+            processHand(id, handId, hands[handId]);
+        });
+
     });
 
-
-    // Load the initial environment
-    r360.compositor.setBackground(r360.getAssetURL('360WorldSun.jpg'));
-    r360.controls.addCameraController(new KeyboardCameraController());
-    let quaternion = new THREE.Quaternion(0,0,0,0);
-    let euler = new THREE.Euler( 0, 0, 0);
+    let quaternion = new THREE.Quaternion(0, 0, 0, 0);
+    let euler = new THREE.Euler(0, 0, 0);
+    //network loop at 24 FPS
     setInterval(() => {
+        /*
+         * network state logic
+         */
+        /*hands*/
+        let hands = {};
+        controllerService.getGamepads().forEach(gamepad => {
+            hands[gamepad.index] = {
+                position: gamepad.getPosition(),
+                rotation: gamepad.getRotation(),
+                pressed: gamepad.isPressed(),
+            }
+        });
+
+        /*head*/
         quaternion.fromArray(r360._cameraQuat);
         euler.setFromQuaternion(quaternion);
-        peerJsService.broadcastData("player_state",{
+
+        /*send data*/
+        peerJsService.broadcastData("player_state", {
             id: peerJsService.peerjs.id,
             position: r360._cameraPosition,
-            rotation: [THREE.Math.radToDeg(euler.x),THREE.Math.radToDeg(euler.y),THREE.Math.radToDeg(euler.z)]
+            rotation: [THREE.Math.radToDeg(euler.x), THREE.Math.radToDeg(euler.y), THREE.Math.radToDeg(euler.z)],
+            hands: hands
         });
-    }, 32);
+    }, FPS24);
 
 }
 
