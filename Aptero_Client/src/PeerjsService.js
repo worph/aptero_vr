@@ -65,6 +65,15 @@ export class PeerjsService {
         }
     }
 
+    sendData(peerId:string,event,data:any) {
+        if (this.getPeer(peerId).connection) {
+            this.getPeer(peerId).connection.send({
+                event: event,
+                data: data
+            });
+        }
+    }
+
     broadcastData(event,data:any) {
         Object.keys(this.peers).forEach((peerId) => {
             if(peerId!==this.peerjs.id) {

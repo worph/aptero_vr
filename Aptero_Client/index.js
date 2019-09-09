@@ -8,6 +8,7 @@ import ParticipantHead from "./src/objects/ParticipantHead";
 import Env from "./src/objects/Env";
 import ParticipantHand from "./src/objects/ParticipantHand";
 import Point from "./src/objects/Point";
+import Points from "./src/objects/Points";
 
 AppRegistry.registerComponent('Hello360', () => Hello360);
 AppRegistry.registerComponent('Menu360', () => Menu360);
@@ -15,5 +16,6 @@ AppRegistry.registerComponent('Room', () => Room);
 AppRegistry.registerComponent('ParticipantHead', () => ParticipantHead);
 AppRegistry.registerComponent('ParticipantHand', () => ParticipantHand);
 AppRegistry.registerComponent('Point', () => Point);
+AppRegistry.registerComponent('Points', () => Points);
 
 AppRegistry.registerComponent('Env', () => Env);

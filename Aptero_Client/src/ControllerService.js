@@ -21,6 +21,9 @@ export class Controller{
     index = -1;
     quaternion = new THREE.Quaternion(0, 0, 0, 0);
     euler = new THREE.Euler(0, 0, 0);
+    lastPosition = [0,0,0];
+    lastRotation = [0,0,0];
+    lastState = {};
 
     constructor(index:number){
         this.index = index;
@@ -46,7 +49,15 @@ export class Controller{
 
     getPosition():number[]{
         const gamepad = this.getGamepad();
-        return [gamepad.pose.position[0],gamepad.pose.position[1],gamepad.pose.position[2]];
+        this.lastPosition[0]=gamepad.pose.position[0];
+        this.lastPosition[1]=gamepad.pose.position[1];
+        this.lastPosition[2]=gamepad.pose.position[2];
+        return this.lastPosition;
+    }
+
+    isVRReady(){
+        const gamepad = this.getGamepad();
+        return gamepad && gamepad.pose && gamepad.pose.orientation
     }
 
     getQuaternion():number[]{
@@ -57,15 +68,17 @@ export class Controller{
     getRotation():number[]{
         this.quaternion.fromArray(this.getQuaternion());
         this.euler.setFromQuaternion(this.quaternion);
-        return [THREE.Math.radToDeg(this.euler.x), THREE.Math.radToDeg(this.euler.y), THREE.Math.radToDeg(this.euler.z)];
+        this.lastRotation[0]=THREE.Math.radToDeg(this.euler.x);
+        this.lastRotation[1]=THREE.Math.radToDeg(this.euler.y);
+        this.lastRotation[2]=THREE.Math.radToDeg(this.euler.z);
+        return this.lastRotation;
     }
 
     getControllerState():ControllerState{
-        return {
-            position:this.getPosition(),
-            rotation:this.getRotation(),
-            pressed:this.isPressed(),
-        }
+        this.lastState.position = this.getPosition();
+        this.lastState.rotation = this.getRotation();
+        this.lastState.pressed = this.isPressed();
+        return this.lastState;
     }
 }
 
@@ -76,20 +89,31 @@ export class ControllerService{
     constructor(){
         window.addEventListener('gamepadconnected', (e) => {
             let gamepad = e.gamepad;
-            console.log("gamepadconnected : ",gamepad)
-            if (gamepad && gamepad.pose && gamepad.pose.orientation) {
-                this.controllers[e.gamepad.index] = new Controller(e.gamepad.index);
+            if(gamepad) {
+                console.log("gamepadconnected : ", gamepad)
+                this.controllers[gamepad.index] = new Controller(gamepad.index);
             }
         });
         window.addEventListener('gamepaddisconnected', (e) => {
-            delete this.controllers[e.gamepad.index];
+            let gamepad = e.gamepad;
+            delete this.controllers[gamepad.index];
         });
-        navigator.getGamepads().forEach(gamepad => {
-            console.log("gamepadconnected : ",gamepad)
-            if (gamepad && gamepad.pose && gamepad.pose.orientation) {
-                this.controllers[e.gamepad.index] = new Controller(e.gamepad.index);
-            }
-        });
+        if(navigator.getGamepads.forEach) {
+            navigator.getGamepads().forEach(gamepad => {
+                if(gamepad) {
+                    console.log("gamepadconnected : ", gamepad);
+                    this.controllers[gamepad.index] = new Controller(gamepad.index);
+                }
+            });
+        }else{
+            Object.keys(navigator.getGamepads()).forEach(gamepadkey => {
+                let gamepad = navigator.getGamepads()[gamepadkey];
+                if(gamepad) {
+                    console.log("gamepadconnected : ", gamepad);
+                    this.controllers[gamepad.index] = new Controller(gamepad.index);
+                }
+            });
+        }
     }
 
     getGamepadsIds():number[] {

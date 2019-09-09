@@ -43,6 +43,10 @@ let MODE_ERASE = "erase";
  * init
  */
 function init(bundle, parent) {
+
+    let controllerService = new ControllerService();
+    let knownHandIds: { [id: string]: { [id: number]: any } } = {};
+
     /*
     Init
      */
@@ -90,18 +94,24 @@ function init(bundle, parent) {
         );
         /*broadcast my points*/
         paint3d.getAll().forEach(pointData => {
-            peerJsService.broadcastData("new_point", pointData);
+            peerJsService.sendData(id, "new_point", pointData);
         })
     });
 
     peerJsService.eventEmitter.on("new_point", (event: {
         event: string,
-        data: {
-            id: string
-        }
+        data: { id: string, x: number, y: number, z: number, color: string }
     }) => {
         let point = event.data;
         paint3d.addPointIfNotPresent(point.x, point.y, point.z, POINT_RADIUS, point);
+    });
+
+    peerJsService.eventEmitter.on("remove_point", (event: {
+        event: string,
+        data: { id: string, x: number, y: number, z: number, color: string }
+    }) => {
+        let point = event.data;
+        paint3d.removePointNear(point.x, point.y, point.z, POINT_RADIUS);
     });
 
 
@@ -109,22 +119,26 @@ function init(bundle, parent) {
     r360.compositor.setBackground(r360.getAssetURL('360WorldSun.jpg'));
     r360.controls.addCameraController(new KeyboardCameraController());
 
+    r360.renderToLocation(
+        r360.createRoot("Points", {}),
+        r360.getDefaultLocation()
+    );
+
     /* paint 3d */
     let paint3d = new Paint3dDrawService();
     paint3d.onPointAdded(data => {
-        r360.renderToLocation(
-            r360.createRoot("Point", {
-                id: data.id, x: data.x, y: data.y, z: data.z, color: data.color
-            }),
-            r360.getDefaultLocation()
-        );
+        bridgeModule.emit("newPoint", data);
         if (data.origin === peerJsService.peerjs.id) {
             //if we created the point we broadcast to others
             peerJsService.broadcastData("new_point", data);
         }
     });
     paint3d.onPointRemoved(data => {
-
+        bridgeModule.emit("removePoint", data);
+        if (data.origin === peerJsService.peerjs.id) {
+            //if we created the point we broadcast to others
+            peerJsService.broadcastData("remove_point", data);
+        }
     });
     let currentColor = RED;
     let currentMode = MODE_DRAW;
@@ -133,8 +147,6 @@ function init(bundle, parent) {
     Input and hand processing
      */
 
-    let controllerService = new ControllerService();
-    let knownHandIds: { [id: string]: { [id: number]: any } } = {};
 
     function processHand(id: string, handId: number, data: ControllerState) {
         if (!knownHandIds[id]) {
@@ -206,32 +218,30 @@ function init(bundle, parent) {
 
     let quaternion = new THREE.Quaternion(0, 0, 0, 0);
     let euler = new THREE.Euler(0, 0, 0);
+    let lastHeadRotation = [0, 0, 0];
+    let payload = {id: peerJsService.peerjs.id, hands: {}};
     //network loop at 24 FPS
     setInterval(() => {
         /*
          * network state logic
          */
         /*hands*/
-        let hands = {};
         controllerService.getGamepads().forEach(gamepad => {
-            hands[gamepad.index] = {
-                position: gamepad.getPosition(),
-                rotation: gamepad.getRotation(),
-                pressed: gamepad.isPressed(),
-            }
+            let state = gamepad.getControllerState();
+            this.payload.hands[gamepad.index] = state;
         });
 
         /*head*/
         quaternion.fromArray(r360._cameraQuat);
         euler.setFromQuaternion(quaternion);
+        lastHeadRotation[0] = THREE.Math.radToDeg(euler.x);
+        lastHeadRotation[0] = THREE.Math.radToDeg(euler.y);
+        lastHeadRotation[0] = THREE.Math.radToDeg(euler.z);
 
         /*send data*/
-        peerJsService.broadcastData("player_state", {
-            id: peerJsService.peerjs.id,
-            position: r360._cameraPosition,
-            rotation: [THREE.Math.radToDeg(euler.x), THREE.Math.radToDeg(euler.y), THREE.Math.radToDeg(euler.z)],
-            hands: hands
-        });
+        payload.position = r360._cameraPosition;
+        payload.rotation = lastHeadRotation;
+        peerJsService.broadcastData("player_state", payload);
     }, FPS24);
 
 
