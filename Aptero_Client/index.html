@@ -1,25 +1,29 @@
 <html>
-  <head>
+<head>
     <title>Aptero</title>
-    <style>body { margin: 0; }</style>
+    <style>body {
+        margin: 0;
+    }</style>
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-  </head>
-  <body>
-    <!-- Attachment point for your app -->
-    <div id="container"></div>
-    <script src="./client.bundle?platform=vr"></script>
-    <!--<script src="./static_assets/lib/peerjs@1.0.4/dist/peerjs.min.js"></script>-->
-    <script src="https://unpkg.com/peerjs@1.0.4/dist/peerjs.min.js"></script>
-    <script>
-        (function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='//mrdoob.github.io/stats.js/build/stats.min.js';document.head.appendChild(script);})()
-    </script>
-    <script>
-      // Initialize the React 360 application
-      React360.init(
+</head>
+<body>
+<!-- Attachment point for your app -->
+<div id="container"></div>
+<script src="./client.bundle?platform=vr"></script>
+<!--<script src="./static_assets/lib/peerjs@1.0.4/dist/peerjs.min.js"></script>-->
+<script src="https://unpkg.com/peerjs@1.0.4/dist/peerjs.min.js"></script>
+<script>
+    /*
+      (function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='//mrdoob.github.io/stats.js/build/stats.min.js';document.head.appendChild(script);})()
+      */
+</script>
+<script>
+    // Initialize the React 360 application
+    React360.init(
         'index.bundle?platform=vr&dev=true',
         document.getElementById('container')
-      );
-    </script>
-  </body>
+    );
+</script>
+</body>
 </html>
 

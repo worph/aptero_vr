@@ -1,6 +1,6 @@
 import {Vector3, Quaternion} from 'three';
 
-const MOVING_SPEED = 0.01;
+const MOVING_SPEED = 0.1;
 
 class ObjectNotation {
     position = null;

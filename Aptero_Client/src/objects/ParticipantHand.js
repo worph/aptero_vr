@@ -3,8 +3,7 @@ import {View, asset} from 'react-360';
 import Entity from 'Entity';
 
 import {NativeModules} from 'react-360';
-const {ControllersModule} = NativeModules;
-import {browserBridge} from '../BrowserBridge';
+import {browserBridge} from '../module/BrowserBridge';
 
 export default class ParticipantHand extends React.Component<{ id: string, startVisible: boolean}, {
     visible: boolean,

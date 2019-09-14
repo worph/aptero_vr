@@ -1,8 +1,7 @@
 import React from 'react';
 import {View, asset} from 'react-360';
-import {RED} from "../Color";
 import Point from "./Point";
-import {browserBridge} from "../BrowserBridge";
+import {browserBridge} from "../module/BrowserBridge";
 
 export default class Points extends React.Component<{}, { points: [], }> {
     state = {

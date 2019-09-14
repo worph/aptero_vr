@@ -15,8 +15,8 @@ const Room = props => {
         />
       <Entity
         source={{
-          obj: asset('meetroom.obj'),
-          mtl: asset('meetroom.mtl')
+          obj: asset('room.obj'),
+          mtl: asset('room.mtl')
         }}
         lit={true}
         shadow={{
@@ -24,9 +24,9 @@ const Room = props => {
         }}
         style={{
           transform: [
-            {translate: [-3, -1, 0]},
+            {translate: [0, -2, -2]},
             {rotateY: 0},
-            {scale: 1}
+            {scale: 0.01}
           ]
         }}
       />

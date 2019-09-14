@@ -9,6 +9,8 @@ import Env from "./src/objects/Env";
 import ParticipantHand from "./src/objects/ParticipantHand";
 import Point from "./src/objects/Point";
 import Points from "./src/objects/Points";
+import {registerCallableModule} from "./src/module/BrowserBridge";
+import HeadLockMenu360 from "./src/react/HeadLockMenu360";
 
 AppRegistry.registerComponent('Hello360', () => Hello360);
 AppRegistry.registerComponent('Menu360', () => Menu360);
@@ -17,5 +19,7 @@ AppRegistry.registerComponent('ParticipantHead', () => ParticipantHead);
 AppRegistry.registerComponent('ParticipantHand', () => ParticipantHand);
 AppRegistry.registerComponent('Point', () => Point);
 AppRegistry.registerComponent('Points', () => Points);
-
+AppRegistry.registerComponent('HeadLockMenu360', () => HeadLockMenu360);
 AppRegistry.registerComponent('Env', () => Env);
+
+registerCallableModule();
