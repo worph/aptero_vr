@@ -1,5 +1,7 @@
 # What is this project?
-In our previous workplaces, we were [wasting](http://thumbnails-visually.netdna-ssl.com/the-ugly-truth-about-meetings_538ca71ea5358_w580.jpg) everyday incredible amount of time to setup meetings and making sure everyone could join. We had remote colleagues dropping off, and often everyone was multitasking during meetings.
+In our previous workplaces, we were [wasting](http://thumbnails-visually.netdna-ssl.com/the-ugly-truth-about-meetings_538ca71ea5358_w580.jpg) everyday incredible amount of time to setup meetings and making sure everyone could join. 
+We had remote colleagues dropping off, and often everyone was multitasking during meetings.
+
 That's why by combining the convenience of online meetings with the interactivity of face-to-face meetings, we can create virtual workspaces where you can collaborate, create and feel truly together with colleagues.
 
 # Aptero VR
