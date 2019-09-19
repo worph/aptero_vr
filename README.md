@@ -7,7 +7,7 @@ That's why by combining the convenience of online meetings with the interactivit
 # Aptero VR
 ![Aptero](https://ipfs.funnychain.co/ipfs/QmdX25VpJTEZFU5ELPVXPmxBHQhUqaMwC25wNbhjk6AXPq)
 A collaborative VR space for creative meeting with 3d sketch made with react360.  
-This app is composed of a client (Aptero_Client) and A server (Aptero_Server).  
+The app is composed of a client (Aptero_Client) and a server (Aptero_Server).  
 
 With Aptero, you'll have access to powerful meetings in interactive VR spaces, enabling remotely to review products and 3D models, brainstorm, sketch, mind-map, prototype and have team-building activities. 
 
