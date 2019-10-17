@@ -165,6 +165,16 @@ export class ApteroLogic {
             this.paint3d.removePointNear(point.x, point.y, point.z, POINT_RADIUS);
         });
 
+
+        this.peerJsService.eventEmitter.on("disconnected", (event: {
+            event: "disconnected",
+            data: {
+                id: string
+            }
+        }) => {
+            this.bridgeModule.emit("setHeadTransform", {id: event.data.id, position: null, rotation: null});
+        });
+
         this.peerJsService.eventEmitter.on("player_state", (event: {
             event: "player_state",
             data: {
@@ -212,7 +222,7 @@ export class ApteroLogic {
             }
         });
 
-        let payload = {id: this.peerJsService.peerjs.id, hands: {}};
+        let payload = {id: this.peerJsService.getMyPeerJsId(), hands: {}};
         //network loop at 24 FPS
         setInterval(() => {
             /*
@@ -227,6 +237,7 @@ export class ApteroLogic {
             });
 
             /*send data*/
+            payload.id = this.peerJsService.getMyPeerJsId();
             payload.position = this.r360._cameraPosition;
             payload.rotation = rotateByQuaternion(this.r360._cameraQuat);
             this.peerJsService.broadcastData("player_state", payload);

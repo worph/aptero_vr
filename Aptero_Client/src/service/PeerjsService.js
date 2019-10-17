@@ -103,9 +103,22 @@ export class PeerjsService {
                 resolve(this.peerjs);
             });
 
+            this.peerjs.on('close', () => {
+                console.error("close")
+            });
+            this.peerjs.on('disconnected', () => {
+                console.error("disconnected")
+            });
+
             this.peerjs.on('error', (err) => {
-                this.display(err);
-                reject(err);
+                if(err.type==="peer-unavailable"){
+                    let peerid = err.message.replace("Could not connect to peer ","");
+                    this.unregisterAnotherIdWithServerAPI(peerid);
+                    console.log("removed "+peerid+" from room");
+                }else{
+                    console.error(err);
+                    reject(err);
+                }
             });
         });
         return res;
@@ -139,6 +152,10 @@ export class PeerjsService {
         return axios.post(this.APIHost + '/' + this.call.id + '/removepeer/' + this.peerjs.id);
     }
 
+    async unregisterAnotherIdWithServerAPI(id:string) {
+        return axios.post(this.APIHost + '/' + this.call.id + '/removepeer/' + id);
+    }
+
     // Call each of the peer IDs using PeerJS
     callPeers() {
         this.call.peers.forEach((peerId) => {
@@ -151,16 +168,18 @@ export class PeerjsService {
     }
 
     callPeer(peerId) {
-        this.display('Calling ' + peerId + '...');
+        console.log('Calling ' + peerId + '...');
         let peer = this.getPeer(peerId);
         peer.outgoing = this.peerjs.call(peerId, this.myStream);
 
         peer.outgoing.on('error', (err) => {
-            this.display(err);
+            this.removePeer(id);
+            console.log("disconnected",id);
+            this.processRequest({event:"disconnected",data:{id:id}});
         });
 
         peer.outgoing.on('stream', (stream) => {
-            this.display('Connected to ' + peerId + '.');
+            console.log('Connected to ' + peerId + '.');
             this.addIncomingStream(peer, stream);
         });
         let id = peer.id;
@@ -171,12 +190,22 @@ export class PeerjsService {
             conn.on('data', (data) => {
                 this.processRequest(data);
             });
+            conn.on('close', () => {
+                this.removePeer(id);
+                console.log("disconnected",id);
+                this.processRequest({event:"disconnected",data:{id:id}});
+            });
+            conn.on('error', () => {
+                this.removePeer(id);
+                console.log("disconnected",id);
+                this.processRequest({event:"disconnected",data:{id:id}});
+            });
         });
     }
 
     // When someone initiates a call via PeerJS
     handleIncomingCall(incoming) {
-        this.display('Answering incoming call from ' + incoming.peer);
+        console.log('Answering incoming call from ' + incoming.peer);
         let peer = this.getPeer(incoming.peer);
         peer.incoming = incoming;
         incoming.answer(this.myStream);
@@ -188,7 +217,7 @@ export class PeerjsService {
     // Add the new audio stream. Either from an incoming call, or
     // from the response to one of our outgoing calls
     addIncomingStream(peer, stream) {
-        this.display('Adding incoming stream from ' + peer.id);
+        console.log('Adding incoming stream from ' + peer.id);
         peer.incomingStream = stream;
         this.playStream(stream);
 
@@ -227,8 +256,16 @@ export class PeerjsService {
     }
 
 
+    getMyPeerJsId():string{
+        return this.peerjs.id;
+    }
+
     ////////////////////////////////////
     // Helper functions
+    removePeer(id:string){
+        delete this.peers[id];
+    }
+
     getPeer(peerId): Peer {
         return this.peers[peerId] || (this.peers[peerId] = {id: peerId});
     }

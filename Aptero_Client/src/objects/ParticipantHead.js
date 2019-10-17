@@ -18,8 +18,14 @@ export default class ParticipantHead extends React.Component<{ id: string, start
     };
 
     componentDidMount(): void {
-        browserBridge.onEvent("setHeadTransform",(data) => {
-            this.setTransform(data.position,data.rotation);
+        browserBridge.onEvent("setHeadTransform",(data: {id: string, position: number[], rotation: number[]}) => {
+            if(data.id===this.props.id) {
+                if(!data.position || !data.rotation){
+                    this.setState({visible:false});
+                }else{
+                    this.setTransform(data.position, data.rotation);
+                }
+            }
         });
     }
 
