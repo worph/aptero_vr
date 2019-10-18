@@ -8,6 +8,7 @@
   "main": "index.ts",
   "private": false,
   "scripts": {
+    "start": "tsc & node dist/",
     "exec": "node dist/",
     "build": "tsc",
     "dev": "tsc --watch & nodemon dist",
@@ -31,6 +32,7 @@
     "html-entities": "^1.2.1",
     "module-alias": "^2.2.0",
     "request": "^2.88.0",
+    "unique-names-generator": "^3.0.0",
     "xml-js": "^1.6.8"
   },
   "devDependencies": {

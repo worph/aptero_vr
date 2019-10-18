@@ -1,7 +1,8 @@
 // Handle prefixed versions
-import axios from 'axios';
 import $ from "jquery";
 import EventEmitter from 'eventemitter3';
+import {RoomsAPI} from "./RoomsAPI";
+import axios from "axios";
 
 navigator.getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
 
@@ -12,32 +13,40 @@ interface Peer {
 }
 
 export class PeerjsService {
-    APIHost: string;
     eventEmitter = new EventEmitter();
     // State
     peerjs = {};
     myStream;
     peers: { [id=>string]: Peer } = {};
-    call: {
+    room: {
         id: string,
         started: number,
         peers: string[]
     } = {id: "", started: 0, peers: []};
+    roomApi:RoomsAPI;
 
-    constructor(APIHost: string) {
-        this.APIHost = APIHost;
+    constructor(roomApi:RoomsAPI) {
+        this.roomApi = roomApi;
     }
 
     async createCall() {
-        this.call = await this.createCallAPI();
+        this.room = await this.roomApi.createCallAPI();
         await this.initPeerJs();
-        return this.call;
+        return this.room;
     }
 
     async setCall(id: string) {
-        this.call = await this.getCallAPI(id);
+        this.room = await this.roomApi.getCallAPI(id);
         await this.initPeerJs();
-        return this.call;
+        return this.room;
+    }
+
+    async updateRoomData(roomid:string,key:string,data:any) {
+        return this.roomApi.updateRoomData(this.room.id,key,data);
+    }
+
+    getRoomData(){
+        return this.roomApi.getRoomData(this.room.id);
     }
 
     // Start everything up
@@ -45,8 +54,8 @@ export class PeerjsService {
         if (!navigator.getUserMedia) return this.unsupported();
         await this.getLocalAudioStream();
         await this.connectToPeerJS();
-        await this.registerIdWithServerAPI(this.peerjs.id);
-        this.peerjs.on('connection', (conn) => {
+        await this.roomApi.registerIdWithServerAPI(this.room.id,this.peerjs.id);
+        this.peerjs.on('connection', (conn:any) => {
             let id = conn.peer;
             this.getPeer(id).connection = conn;
             conn.on('open', () => {
@@ -56,7 +65,7 @@ export class PeerjsService {
                 });
             });
         });
-        if (this.call.peers.length) {
+        if (this.room.peers.length) {
             this.callPeers();
             return false;
         } else {
@@ -104,16 +113,16 @@ export class PeerjsService {
             });
 
             this.peerjs.on('close', () => {
-                console.error("close")
+                this.disconnectedEvent(this.peerjs.id);
             });
             this.peerjs.on('disconnected', () => {
-                console.error("disconnected")
+                this.disconnectedEvent(this.peerjs.id);
             });
 
             this.peerjs.on('error', (err) => {
                 if(err.type==="peer-unavailable"){
                     let peerid = err.message.replace("Could not connect to peer ","");
-                    this.unregisterAnotherIdWithServerAPI(peerid);
+                    this.disconnectedEvent(peerid);
                     console.log("removed "+peerid+" from room");
                 }else{
                     console.error(err);
@@ -124,41 +133,9 @@ export class PeerjsService {
         return res;
     }
 
-    // Add our ID to the list of PeerJS IDs for this call
-    async createCallAPI(): Promise<any> {
-        this.display('Registering ID with server...');
-        return axios.get(this.APIHost + '/new').then(res => {
-            return res.data;
-        });
-    }
-
-
-    // Add our ID to the list of PeerJS IDs for this call
-    async getCallAPI(id: string): Promise<any> {
-        this.display('Registering ID with server...');
-        return axios.get(this.APIHost + '/' + id + ".json").then(res => {
-            return res.data;
-        });
-    }
-
-    // Add our ID to the list of PeerJS IDs for this call
-    async registerIdWithServerAPI() {
-        this.display('Registering ID with server...');
-        return axios.post(this.APIHost + '/' + this.call.id + '/addpeer/' + this.peerjs.id);
-    }
-
-    // Remove our ID from the call's list of IDs
-    async unregisterIdWithServerAPI() {
-        return axios.post(this.APIHost + '/' + this.call.id + '/removepeer/' + this.peerjs.id);
-    }
-
-    async unregisterAnotherIdWithServerAPI(id:string) {
-        return axios.post(this.APIHost + '/' + this.call.id + '/removepeer/' + id);
-    }
-
     // Call each of the peer IDs using PeerJS
     callPeers() {
-        this.call.peers.forEach((peerId) => {
+        this.room.peers.forEach((peerId) => {
             this.callPeer(peerId)
         });
     }
@@ -167,22 +144,27 @@ export class PeerjsService {
         this.eventEmitter.emit(data.event, data);
     }
 
+    disconnectedEvent(id:string){
+        console.log("disconnected",id);
+        this.processRequest({event:"disconnected",data:{id:id}});
+        return this.roomApi.unregisterIdWithServerAPI(this.room.id,id);
+    }
+
     callPeer(peerId) {
         console.log('Calling ' + peerId + '...');
         let peer = this.getPeer(peerId);
+        let id = peer.id;
         peer.outgoing = this.peerjs.call(peerId, this.myStream);
 
         peer.outgoing.on('error', (err) => {
             this.removePeer(id);
-            console.log("disconnected",id);
-            this.processRequest({event:"disconnected",data:{id:id}});
+            this.disconnectedEvent(id);
         });
 
         peer.outgoing.on('stream', (stream) => {
             console.log('Connected to ' + peerId + '.');
             this.addIncomingStream(peer, stream);
         });
-        let id = peer.id;
         let conn = this.peerjs.connect(id);
         this.getPeer(peer.id).connection = conn;
         conn.on('open', () => {
@@ -192,13 +174,11 @@ export class PeerjsService {
             });
             conn.on('close', () => {
                 this.removePeer(id);
-                console.log("disconnected",id);
-                this.processRequest({event:"disconnected",data:{id:id}});
+                this.disconnectedEvent(id);
             });
             conn.on('error', () => {
                 this.removePeer(id);
-                console.log("disconnected",id);
-                this.processRequest({event:"disconnected",data:{id:id}});
+                this.disconnectedEvent(id);
             });
         });
     }
@@ -207,7 +187,13 @@ export class PeerjsService {
     handleIncomingCall(incoming) {
         console.log('Answering incoming call from ' + incoming.peer);
         let peer = this.getPeer(incoming.peer);
+        let id = peer.id;
         peer.incoming = incoming;
+        peer.incoming.on('error', (err) => {
+            this.removePeer(id);
+            this.disconnectedEvent(id);
+        });
+
         incoming.answer(this.myStream);
         peer.incoming.on('stream', (stream) => {
             this.addIncomingStream(peer, stream);

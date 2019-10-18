@@ -33,8 +33,12 @@ export class Paint3dDrawService{
     }
 
     addPointIfNotPresent(x:number,y:number,z:number,radius:number,data:any):void{
+        if(data.pointid>=this.nextUniqueId){
+            this.nextUniqueId = data.pointid+1;
+        }
         if(!this.octree.find(x, y, z, radius)){
             let pointData = {
+                pointid : this.getNextUniqueId(),
                 x:x,
                 y:y,
                 z:z,

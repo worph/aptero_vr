@@ -5,6 +5,7 @@ import {rotateByQuaternion} from "./common/MathUtil";
 import {PeerjsService} from "./service/PeerjsService";
 import {controllerService} from "./service/ControllerService";
 import KeyboardCameraController from "./react/KeyboardCameraController";
+import {RoomsAPI} from "./service/RoomsAPI";
 
 let FPS60 = 1000 / 60;
 let FPS24 = 1000 / 24;
@@ -12,7 +13,7 @@ let FPS24 = 1000 / 24;
 export class ApteroLogic {
     bridgeModule;
     colorModule;
-    peerJsService;
+    peerJsService:PeerjsService;
     paint3d;
     r360;
     knownHandIds: { [id: string]: { [id: number]: any } } = {};
@@ -110,7 +111,8 @@ export class ApteroLogic {
          */
         let host = window.location.href.startsWith("https://") ? "https://meeting.aptero.co" : "http://127.0.0.1:6767";
         console.log("backend:" + host);
-        this.peerJsService = new PeerjsService(host);
+        let roomsAPI:RoomsAPI = new RoomsAPI(host);
+        this.peerJsService = new PeerjsService(roomsAPI);
         let split = window.location.href.split("#");
         if (split.length === 2) {
             console.log("joining room : " + split[1]);
@@ -122,6 +124,14 @@ export class ApteroLogic {
                 window.location.href = "index.html#room/" + this.peerJsService.call.id;
             })
         }
+
+        console.log("load persistent data");
+        let points = this.peerJsService.getRoomData()["points"] || {};
+        Object.keys(points).forEach(key => {
+            let point = points[key];
+            this.paint3d.addPointIfNotPresent(point.x, point.y, point.z, POINT_RADIUS, point);
+        });
+        console.log("finished persistent data");
 
         window.onunload = () => {
             this.peerJsService.unregisterIdWithServerAPI()
@@ -143,10 +153,6 @@ export class ApteroLogic {
                 }),
                 this.r360.getDefaultLocation()
             );
-            /*broadcast my points*/
-            this.paint3d.getAll().forEach(pointData => {
-                this.peerJsService.sendData(id, "new_point", pointData);
-            })
         });
 
         this.peerJsService.eventEmitter.on("new_point", (event: {
@@ -172,7 +178,7 @@ export class ApteroLogic {
                 id: string
             }
         }) => {
-            this.bridgeModule.emit("setHeadTransform", {id: event.data.id, position: null, rotation: null});
+            this.bridgeModule.emit("setHeadTransform", {id: event.data.id, position: [], rotation: []});
         });
 
         this.peerJsService.eventEmitter.on("player_state", (event: {
@@ -212,6 +218,7 @@ export class ApteroLogic {
             if (data.origin === this.peerJsService.peerjs.id) {
                 //if we created the point we broadcast to others
                 this.peerJsService.broadcastData("new_point", data);
+                this.peerJsService.updateRoomData(data.pointid,data);
             }
         });
         this.paint3d.onPointRemoved(data => {

@@ -20,7 +20,7 @@ export default class ParticipantHead extends React.Component<{ id: string, start
     componentDidMount(): void {
         browserBridge.onEvent("setHeadTransform",(data: {id: string, position: number[], rotation: number[]}) => {
             if(data.id===this.props.id) {
-                if(!data.position || !data.rotation){
+                if(data.position.length===0 || data.rotation.length===0){
                     this.setState({visible:false});
                 }else{
                     this.setTransform(data.position, data.rotation);

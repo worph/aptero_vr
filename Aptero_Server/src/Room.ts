@@ -1,49 +1,80 @@
 let uuid = require('uuid');
+const { uniqueNamesGenerator } = require('unique-names-generator');
 
-export class RoomManager{
+export class RoomManager {
 
-  rooms = [];
+    rooms = [];
 
-  create() {
-    let call = new Room();
-    this.rooms.push(call);
-    return call;
-  };
+    create():Room {
+        let room = new Room();
+        this.rooms.push(room);
+        return room;
+    };
 
-  get(id) {
-    return (this.rooms.filter((call) => {
-      return id === call.id;
-    }) || [])[0];
-  };
+    get(id):Room {
+        return (this.rooms.filter((room) => {
+            return id === room.id;
+        }) || [])[0];
+    };
 
-  getAll() {
-    return this.rooms;
-  };
+    remove(id):void{
+      this.rooms = this.rooms.filter((room) => {
+        return id !== room.id;
+      });
+    }
+
+    getAll():Room[] {
+        return this.rooms;
+    };
 
 }
 
 export class Room {
-  private peers: string[];
-  private started: number;
-  private id: string;
+    private peers: string[];
+    private started: number;
+    private id: string;
 
-  constructor(){
-      this.id = uuid.v1();
-      this.started = Date.now();
-      this.peers = [];
-  }
+    data: any = {};
 
-  toJSON() {
-    return {id: this.id, started: this.started, peers: this.peers};
-  };
+    constructor() {
+        //this.id = uuid.v1();
+        this.id = uniqueNamesGenerator({
+            separator: '-', length: 2 }); // big-donkey
+        this.started = Date.now();
+        this.peers = [];
+    }
 
-  addPeer(peerId:string) {
-    this.peers.push(peerId);
-  };
+    toJSON() {
+        return {id: this.id, started: this.started, peers: this.peers};
+    };
 
-  removePeer(peerId:string) {
-    let index = this.peers.lastIndexOf(peerId);
-    if (index !== -1) this.peers.splice(index, 1);
-  };
+    addPeer(peerId: string) {
+        this.peers.push(peerId);
+    };
+
+    updateRoomData(key: string, data: any) {
+        if (!this.data[key]) {
+            this.data[key] = {};
+        }
+        this.data[key] = {...this.data[key], ...data};
+    }
+
+    removeRoomDataEntry(key: string, keyEntry: string) {
+        let data = this.data[key];
+        delete data[keyEntry];
+    }
+
+    removeRoomData(key: string) {
+        delete this.data[key];
+    }
+
+    getRoomData(): any {
+        return this.data;
+    }
+
+    removePeer(peerId: string) {
+        let index = this.peers.lastIndexOf(peerId);
+        if (index !== -1) this.peers.splice(index, 1);
+    };
 
 }

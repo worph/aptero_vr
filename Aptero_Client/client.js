@@ -1,5 +1,5 @@
 // This file contains the boilerplate to execute your React app.
-// If you want to modify your application's content, start in "index.js"
+// If you want to modify your application's content, start in "index.ts"
 
 import {BrowserBridgeNativeModule} from "./src/module/BrowserBridge";
 
