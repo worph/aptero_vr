@@ -241,6 +241,9 @@ export class PeerjsService {
         })
     }
 
+    getCurrentRoomId():string{
+        return this.room.id;
+    }
 
     getMyPeerJsId():string{
         return this.peerjs.id;

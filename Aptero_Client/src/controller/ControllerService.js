@@ -17,6 +17,7 @@ export interface ControllerState{
     pressed: boolean,
 }
 
+
 export class Controller{
     index = -1;
     quaternion = new THREE.Quaternion(0, 0, 0, 0);
@@ -66,13 +67,17 @@ export class Controller{
         return gamepad.pose.orientation;
     }
 
-    getRotation():number[]{
-        this.quaternion.fromArray(this.getQuaternion());
+    convertQuaternionToEuler(quat:[]):number[]{
+        this.quaternion.fromArray(quat);
         this.euler.setFromQuaternion(this.quaternion);
         this.lastRotation[0]=THREE.Math.radToDeg(this.euler.x);
         this.lastRotation[1]=THREE.Math.radToDeg(this.euler.y);
         this.lastRotation[2]=THREE.Math.radToDeg(this.euler.z);
         return this.lastRotation;
+    }
+
+    getRotation():number[]{
+        return this.convertQuaternionToEuler(this.getQuaternion());
     }
 
     getHandPointer():number[]{
@@ -97,11 +102,27 @@ export class Controller{
     }
 }
 
+
 export class ControllerService{
 
     controllers: {[id:number]:Controller} = {};
 
+
+    convertQuaternionToEuler(quat:[]):number[]{
+        let quaternion = new THREE.Quaternion(0, 0, 0, 0);
+        let euler = new THREE.Euler(0, 0, 0);
+        let vector = new THREE.Vector3( 0, 0, 0 );
+        let lastRotation = [0,0,0];
+        quaternion.fromArray(quat);
+        euler.setFromQuaternion(quaternion);
+        lastRotation[0]=THREE.Math.radToDeg(euler.x);
+        lastRotation[1]=THREE.Math.radToDeg(euler.y);
+        lastRotation[2]=THREE.Math.radToDeg(euler.z);
+        return lastRotation;
+    }
+
     constructor(){
+
         window.addEventListener('gamepadconnected', (e) => {
             let gamepad = e.gamepad;
             if(gamepad) {

@@ -16,6 +16,7 @@ function init(bundle, parent) {
         // Add custom options here
         fullScreen: true,
         assetRoot: 'static_assets/',
+        // Add custom options here
         // Register custom modules at init time
         frame: ()=>{
             netLogic.update(r360);

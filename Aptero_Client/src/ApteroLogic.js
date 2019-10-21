@@ -1,14 +1,40 @@
 import {MODE_DRAW, POINT_RADIUS} from "./common/Color";
 import {Paint3dDrawService} from "./service/Paint3dDrawService";
-import type {ControllerState} from "./service/ControllerService";
+import type {ControllerState} from "./controller/ControllerService";
 import {rotateByQuaternion} from "./common/MathUtil";
 import {PeerjsService} from "./service/PeerjsService";
-import {controllerService} from "./service/ControllerService";
-import KeyboardCameraController from "./react/KeyboardCameraController";
+import {controllerService} from "./controller/ControllerService";
+import KeyboardCameraController from "./controller/KeyboardCameraController";
 import {RoomsAPI} from "./service/RoomsAPI";
+import type {Raycaster} from "react-360-web/js/Controls/Raycasters/Types";
+import {Vector3, Quaternion} from 'three';
 
 let FPS60 = 1000 / 60;
 let FPS24 = 1000 / 24;
+
+export class CustomRayCaster implements Raycaster{
+    drawsCursor(): boolean{
+        return true;
+    }
+    fillDirection(direction: Vec3): boolean{
+        console.log("direction:"+direction);
+        return false;
+    }
+    fillOrigin(origin: Vec3): boolean{
+        console.log("origin:"+origin);
+        return false;
+    }
+    getMaxLength(): number{
+        return Infinity;
+    }
+    getType(): string{
+        return 'mouse';
+    }
+    hasAbsoluteCoordinates(): boolean{
+        return false;
+    }
+}
+
 
 export class ApteroLogic {
     bridgeModule;
@@ -21,44 +47,68 @@ export class ApteroLogic {
     lastInputState: boolean[] = [];
 
     update() {
+
         /**
          //hand mapping
          **/
-        controllerService.getGamepads().forEach(gamepad => {
-            if (gamepad.isVRReady()) {
-                let handId = gamepad.index;
-                let gstate = gamepad.getControllerState();
-                this.processHand(this.peerJsService.peerjs.id, handId,gstate);
-                if(this.lastInputState[handId]!==gamepad.isPressed()){
-                    //detect change in input
-                    //Prevent drawing on click / drawing is only available on pressed behavior
-                    this.lastInputState[handId]=gamepad.isPressed();
-                    this.inputAvailable[handId] = false;
-                    setTimeout(()=>{
-                        console.log("input available");
-                        this.inputAvailable[handId] = true;
-                    },200)
-                }
-                if (gamepad.isPressed() && this.inputAvailable[handId]) {
-                    let pos = gamepad.getHandPointer();
-                    if (this.colorModule.getMode() === MODE_DRAW) {
-                        this.paint3d.addPointIfNotPresent(pos[0], pos[1], pos[2], POINT_RADIUS, {
-                            id: this.paint3d.getNextUniqueId(),
-                            color: this.colorModule.getColor(),
-                            origin: this.peerJsService.peerjs.id
-                        });
-                    } else {
-                        console.log("remove");
-                        this.paint3d.removePointNear(pos[0], pos[1], pos[2], POINT_RADIUS*4);
+        let controllerServiceLoc = controllerService;
+        if(controllerServiceLoc.getGamepads().length==0){
+            let pos = this.r360.getCameraPosition();
+            let quat = this.r360.getCameraQuaternion();
+            let posVector = new Vector3(pos[0],pos[1],pos[2]);
+            let quaternion = new Quaternion(quat[0],quat[1],quat[2],quat[3]);
+            let ray = new Vector3(0,0,-0.5).applyQuaternion(quaternion);
+            let ret:Vector3 = posVector.add(ray);
+            let rotEuler = controllerServiceLoc.convertQuaternionToEuler(quat);
+            if(this.peerJsService) {
+                this.processHand(this.peerJsService.peerjs.id, 99, {
+                    position: [ret.x,ret.y,ret.z],
+                    rotation: rotEuler,
+                    pressed: false,
+                });
+                //this.drawAt(ret.x,ret.y,ret.z);
+            }
+        }else {
+            controllerServiceLoc.getGamepads().forEach(gamepad => {
+                if (gamepad.isVRReady()) {
+                    let handId = gamepad.index;
+                    let gstate = gamepad.getControllerState();
+                    this.processHand(this.peerJsService.peerjs.id, handId, gstate);
+                    if (this.lastInputState[handId] !== gamepad.isPressed()) {
+                        //detect change in input
+                        //Prevent drawing on click / drawing is only available on pressed behavior
+                        this.lastInputState[handId] = gamepad.isPressed();
+                        this.inputAvailable[handId] = false;
+                        setTimeout(() => {
+                            console.log("input available");
+                            this.inputAvailable[handId] = true;
+                        }, 200)
+                    }
+                    if (gamepad.isPressed() && this.inputAvailable[handId]) {
+                        let pos = gamepad.getHandPointer();
+                        this.drawAt(pos[0],pos[1],pos[2]);
                     }
                 }
-            }
-        });
+            });
+        }
+    }
+
+    drawAt(x,y,z){
+        if (this.colorModule.getMode() === MODE_DRAW) {
+            this.paint3d.addPointIfNotPresent(x, y, z, POINT_RADIUS, {
+                id: this.paint3d.getNextUniqueId(),
+                color: this.colorModule.getColor(),
+                origin: this.peerJsService.peerjs.id
+            });
+        } else {
+            console.log("remove");
+            this.paint3d.removePointNear(x, y, z, POINT_RADIUS * 4);
+        }
     }
 
     setupReact360() {
-        this.r360.renderToSurface(this.r360.createRoot('HeadLockMenu360'),
-            this.r360.getDefaultSurface());
+
+        this.r360.renderToSurface(this.r360.createRoot('HeadLockMenu360'), this.r360.getDefaultSurface());
 
         this.r360.renderToLocation(
             this.r360.createRoot('Room'),
@@ -105,6 +155,16 @@ export class ApteroLogic {
         }
     }
 
+    loadPersistentData(){
+        console.log("load persistent data");
+        let points = this.peerJsService.getRoomData()["points"] || {};
+        Object.keys(points).forEach(key => {
+            let point = points[key];
+            this.paint3d.addPointIfNotPresent(point.x, point.y, point.z, POINT_RADIUS, point);
+        });
+        console.log("finished persistent data");
+    }
+
     setupNetwork() {
         /*
          * Handle room connection
@@ -117,21 +177,17 @@ export class ApteroLogic {
         if (split.length === 2) {
             console.log("joining room : " + split[1]);
             let roomId = split[1].split("/")[1];
-            this.peerJsService.setCall(roomId);
+            this.peerJsService.setCall(roomId).then(() => {
+                this.loadPersistentData();
+            });
         } else {
             console.log("creating room");
             this.peerJsService.createCall().then(() => {
-                window.location.href = "index.html#room/" + this.peerJsService.call.id;
+                window.location.href = "index.html#room/" + this.peerJsService.getCurrentRoomId();
+                this.loadPersistentData();
             })
         }
 
-        console.log("load persistent data");
-        let points = this.peerJsService.getRoomData()["points"] || {};
-        Object.keys(points).forEach(key => {
-            let point = points[key];
-            this.paint3d.addPointIfNotPresent(point.x, point.y, point.z, POINT_RADIUS, point);
-        });
-        console.log("finished persistent data");
 
         window.onunload = () => {
             this.peerJsService.unregisterIdWithServerAPI()
