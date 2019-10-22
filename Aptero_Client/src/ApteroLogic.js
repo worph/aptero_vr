@@ -190,7 +190,7 @@ export class ApteroLogic {
 
 
         window.onunload = () => {
-            this.peerJsService.unregisterIdWithServerAPI()
+            this.peerJsService.roomApi.unregisterIdWithServerAPI(this.peerJsService.getCurrentRoomId(),this.peerJsService.getMyPeerJsId())
         };
 
         /*
