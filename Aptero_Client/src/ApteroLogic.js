@@ -65,7 +65,7 @@ export class ApteroLogic {
             if (gamepad.isVRReady() && this.peerJsService && this.peerJsService.peerjs.id) {
                 let handId = gamepad.index;
                 this.processHand(this.peerJsService.peerjs.id, handId, gstate);
-                if (gstate.activated) {
+                if (gstate.activated && gamepad.isPressed()) {
                     let pos = gamepad.getHandPointer();
                     let rot = gamepad.getRotation();
                     this.actionAt(pos[0], pos[1], pos[2], rot[0], rot[1], rot[2]);
@@ -77,12 +77,10 @@ export class ApteroLogic {
     actionAt(x, y, z, rx, ry, rz) {
         if (this.colorModule.getMode() === MODE_DRAW) {
             this.paint3d.addPointIfNotPresent(x, y, z, POINT_RADIUS, {
-                id: this.paint3d.getNextUniqueId(),
                 color: this.colorModule.getColor(),
                 origin: this.peerJsService.peerjs.id
             });
-        }
-        if (this.colorModule.getMode() === MODE_NOTE) {
+        }else if (this.colorModule.getMode() === MODE_NOTE) {
             this.noteService.createNoteAt(x, y, z, rx, ry, rz);
         } else {
             this.paint3d.removePointNear(x, y, z, POINT_RADIUS * 4);
@@ -95,7 +93,6 @@ export class ApteroLogic {
         this.r360.renderToSurface(this.r360.createRoot('HeadLockMenu360'), this.r360.getDefaultSurface());
 
 
-        this.noteService.createNoteAt(0, 0, 0);
 
         this.r360.renderToLocation(
             this.r360.createRoot('Room'),
@@ -115,6 +112,9 @@ export class ApteroLogic {
             this.r360.createRoot("Points", {}),
             this.r360.getDefaultLocation()
         );
+
+
+        //this.noteService.createNoteAt(0, 0, 0);
     }
 
     /*
@@ -143,13 +143,13 @@ export class ApteroLogic {
     }
 
     loadPersistentData() {
-        console.log("load persistent data");
+        /*console.log("load persistent data");
         let points = this.peerJsService.getRoomData()["points"] || {};
         Object.keys(points).forEach(key => {
             let point = points[key];
             this.paint3d.addPointIfNotPresent(point.x, point.y, point.z, POINT_RADIUS, point);
         });
-        console.log("finished persistent data");
+        console.log("finished persistent data");*/
     }
 
     setupNetwork() {
@@ -261,7 +261,7 @@ export class ApteroLogic {
             if (data.origin === this.peerJsService.peerjs.id) {
                 //if we created the point we broadcast to others
                 this.peerJsService.broadcastData("new_point", data);
-                this.peerJsService.updateRoomData(data.pointid, data);
+                this.peerJsService.updateRoomData(data.id, data);
             }
         });
         this.paint3d.onPointRemoved(data => {

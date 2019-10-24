@@ -26,7 +26,7 @@ export default class Note extends React.Component<{ id: string, position: { x: n
                 // Fill the entire surface
                 width: 0.5,
                 height: 0.5,
-                backgroundColor: 'rgba(255, 255, 0, 0.95)',
+                backgroundColor: 'rgba(255, 255, 0, 1)',
                 justifyContent: 'center',
                 alignItems: 'center',
                 position: 'absolute',
@@ -43,8 +43,10 @@ export default class Note extends React.Component<{ id: string, position: { x: n
                     Push the button and speak to add text {this.props.id}
                 </Text>
                 <VrButton onClick={(event) => {
+                    console.log("move")
                 }}><Text>Move</Text></VrButton>
                 <VrButton onClick={(event) => {
+                    console.log("edit");
                 }}><Text>Edit</Text></VrButton>
             </View>
         );
