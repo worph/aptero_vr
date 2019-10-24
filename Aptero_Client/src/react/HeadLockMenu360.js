@@ -6,7 +6,7 @@ import {
     VrButton,
     NativeModules,
 } from 'react-360';
-import {BLACK, BLUE, CYAN, GREEN, MODE_DRAW, MODE_ERASE, PINK, RED, WHITE, YELLOW} from "../common/Color";
+import {BLACK, BLUE, CYAN, GREEN, MODE_DRAW, MODE_ERASE, MODE_NOTE, PINK, RED, WHITE, YELLOW} from "../common/Color";
 
 const {ColorModule} = NativeModules;
 
@@ -99,6 +99,9 @@ export default class HeadLockMenu360 extends React.Component {
                             <VrButton style={this.state.mode=== MODE_ERASE? styles.modeButtonSelected : styles.modeButton} onClick={(event) => {
                                 this.setMode(event,MODE_ERASE)
                             }}><Text>Erase</Text></VrButton>
+                            <VrButton style={this.state.mode=== MODE_NOTE? styles.modeButtonSelected : styles.modeButton} onClick={(event) => {
+                                this.setMode(event,MODE_NOTE)
+                            }}><Text>Note</Text></VrButton>
                         </View>
                     </View>
                 }

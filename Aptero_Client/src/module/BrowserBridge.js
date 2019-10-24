@@ -32,9 +32,11 @@ export class BrowserBridge {
 
     notifyEvent(eventName, eventData) {
         let handlers = this._subscribers[eventName];
-        Object.keys(handlers).forEach(key => {
-            handlers[key](eventData);
-        });
+        if(handlers) {
+            Object.keys(handlers).forEach(key => {
+                handlers[key](eventData);
+            });
+        }
     }
 }
 
@@ -55,6 +57,9 @@ export class BrowserBridgeNativeModule extends Module {
     emit(eventName:string, eventData:any) {
         if (!this._rnctx) {
             return;
+        }
+        if(!eventName || !eventData){
+            throw new Error("invalid params");
         }
         this._rnctx.callFunction(this._bridgeName, 'notifyEvent', [eventName, eventData]);
     }

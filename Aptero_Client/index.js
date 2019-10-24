@@ -11,6 +11,7 @@ import Point from "./src/objects/Point";
 import Points from "./src/objects/Points";
 import {registerCallableModule} from "./src/module/BrowserBridge";
 import HeadLockMenu360 from "./src/react/HeadLockMenu360";
+import Note from "./src/objects/Note";
 
 AppRegistry.registerComponent('Hello360', () => Hello360);
 AppRegistry.registerComponent('Menu360', () => Menu360);
@@ -21,5 +22,6 @@ AppRegistry.registerComponent('Point', () => Point);
 AppRegistry.registerComponent('Points', () => Points);
 AppRegistry.registerComponent('HeadLockMenu360', () => HeadLockMenu360);
 AppRegistry.registerComponent('Env', () => Env);
+AppRegistry.registerComponent('Note', ()=> Note);
 
 registerCallableModule();

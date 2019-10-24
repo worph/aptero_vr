@@ -2,8 +2,8 @@ import React from 'react';
 import {View, asset} from 'react-360';
 import Entity from 'Entity';
 
-import {NativeModules} from 'react-360';
 import {browserBridge} from '../module/BrowserBridge';
+import type {ControllerState} from "../controller/ControllerService";
 
 export default class ParticipantHand extends React.Component<{ id: string, startVisible: boolean}, {
     visible: boolean,
@@ -20,9 +20,10 @@ export default class ParticipantHand extends React.Component<{ id: string, start
 
     componentDidMount(): void {
         this.handId = this.props.handId;
-        browserBridge.onEvent("setHandTransform",(data) => {
+        browserBridge.onEvent("setHandTransform",(data:ControllerState) => {
             if(data.handId===this.handId) {
                 this.setTransform(data.position, data.rotation);
+                this.setState({visible:data.activated})
             }
         });
     }

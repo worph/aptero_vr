@@ -13,11 +13,8 @@ class ObjectNotation {
 
     translateOnAxis = (axis, distance) => {
         const v1 = new Vector3();
-
         v1.copy(axis).applyQuaternion(this.quaternion);
-
         this.position.add(v1.multiplyScalar(distance));
-
     };
 
     translateX = (distance) => {
@@ -79,16 +76,16 @@ export default class KeyboardCameraController {
 
 
     onKeyDown = (event) => {
-        if (event.keyCode === 38 || event.keyCode === 87) {
+        if (event.keyCode === 38 /*|| event.keyCode === 87*/) {
             this._moveForward();
         }
-        else if (event.keyCode === 40 || event.keyCode === 83) {
+        else if (event.keyCode === 40 /*|| event.keyCode === 83*/) {
             this._moveBackward();
         }
-        else if (event.keyCode === 37 || event.keyCode === 65) {
+        else if (event.keyCode === 37 /*|| event.keyCode === 65*/) {
             this._moveLeft();
         }
-        else if (event.keyCode === 39 || event.keyCode === 68) {
+        else if (event.keyCode === 39 /*|| event.keyCode === 68*/) {
             this._moveRight();
         }
     }
