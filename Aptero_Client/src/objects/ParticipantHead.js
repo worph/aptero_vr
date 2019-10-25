@@ -4,7 +4,7 @@ import Entity from 'Entity';
 
 import {NativeModules} from 'react-360';
 const {ControllersModule} = NativeModules;
-import {browserBridge} from '../module/BrowserBridge';
+import {browserBridge} from '../module/BrowserBridgeIndex';
 
 export default class ParticipantHead extends React.Component<{ id: string, startVisible: boolean}, {
     visible: boolean,

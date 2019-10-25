@@ -18,13 +18,19 @@ export interface ControllerState {
 }
 
 export interface Controller {
-    isPressed():boolean;
+    isPressed(): boolean;
+
+    getIndex(): number;
+
+    isInputProcessed(): boolean;
+
+    setInputProcessed(): boolean;
 
     getHand(): string;
 
     getPosition(): number[];
 
-    isVRReady():boolean;
+    isVRReady(): boolean;
 
     getQuaternion(): number[];
 

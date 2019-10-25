@@ -1,7 +1,7 @@
 // This file contains the boilerplate to execute your React app.
 // If you want to modify your application's content, start in "index.ts"
 
-import {BrowserBridgeNativeModule} from "./src/module/BrowserBridge";
+import {BrowserBridgeNativeModule} from "./src/module/BrowserBridgeClient";
 
 require("babel-core/register");
 require("babel-polyfill");
@@ -11,7 +11,7 @@ import {ColorModule} from "./src/module/ColorModule";
 import {ApteroLogic} from "./src/ApteroLogic";
 
 function init(bundle, parent) {
-    let netLogic = new ApteroLogic();
+    let apteroLogic = new ApteroLogic();
     const r360 = new ReactInstance(bundle, parent, {
         // Add custom options here
         fullScreen: true,
@@ -19,22 +19,22 @@ function init(bundle, parent) {
         // Add custom options here
         // Register custom modules at init time
         frame: ()=>{
-            netLogic.update(r360);
+            apteroLogic.update(r360);
         },
         nativeModules: [
             ctx => {
-                netLogic.bridgeModule = new BrowserBridgeNativeModule(ctx);
-                return netLogic.bridgeModule;
+                let bridgeModule = new BrowserBridgeNativeModule(ctx);
+                apteroLogic.setBridgeModule(bridgeModule);
+                return bridgeModule;
             },
             ctx => {
-                netLogic.colorModule = new ColorModule(ctx);
-                return netLogic.colorModule;
+                let colorModule = new ColorModule(ctx);
+                apteroLogic.setColorModule(colorModule);
+                return colorModule;
             }
         ]
     });
-    netLogic.r360 = r360;
-    netLogic.setupReact360(r360);
-    netLogic.setupNetwork(r360);
+    apteroLogic.setReact360(r360);
 }
 
 window.React360 = {init};

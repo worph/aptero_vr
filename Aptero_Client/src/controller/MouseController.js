@@ -2,6 +2,7 @@ import * as THREE from "three";
 import {Vector3} from "three";
 import {Quaternion} from "three";
 import type {Controller, ControllerState} from "./ControllerService";
+import {convertQuaternionToEuler} from "../common/MathUtil";
 
 export class MouseController implements Controller {
     index = -1;
@@ -18,6 +19,20 @@ export class MouseController implements Controller {
         activated: true,
     };
     keyPressed = false;
+
+    lastButtonState = false;
+
+    isInputProcessed(): boolean {
+        return this.lastButtonState !== this.isPressed();
+    }
+
+    setInputProcessed(): void {
+        this.lastButtonState = this.isPressed();
+    }
+
+    getIndex() {
+        return this.index;
+    }
 
     setActive(active: boolean) {
         this.lastState.activated = active;
@@ -71,17 +86,8 @@ export class MouseController implements Controller {
         return quat;
     }
 
-    convertQuaternionToEuler(quat: []): number[] {
-        this.quaternion.fromArray(quat);
-        this.euler.setFromQuaternion(this.quaternion);
-        this.lastRotation[0] = THREE.Math.radToDeg(this.euler.x);
-        this.lastRotation[1] = THREE.Math.radToDeg(this.euler.y);
-        this.lastRotation[2] = THREE.Math.radToDeg(this.euler.z);
-        return this.lastRotation;
-    }
-
     getRotation(): number[] {
-        return this.convertQuaternionToEuler(this.getQuaternion());
+        return convertQuaternionToEuler(this.getQuaternion());
     }
 
     getHandPointer(): number[] {

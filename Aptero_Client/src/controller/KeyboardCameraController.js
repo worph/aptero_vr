@@ -39,19 +39,14 @@ export default class KeyboardCameraController {
         document.addEventListener('keydown', (event) => this.onKeyDown(event));
 
         window.addEventListener("message", (event) => {
-            if(event.data.type ==='KEYBOARD_CAMERA_CONTROLLER_MESSAGE')
-            {
-                if(event.data.direction ==='UP')
-                {
+            if (event.data.type === 'KEYBOARD_CAMERA_CONTROLLER_MESSAGE') {
+                if (event.data.direction === 'UP') {
                     this._moveForward();
-                }else if(event.data.direction ==='DOWN')
-                {
+                } else if (event.data.direction === 'DOWN') {
                     this._moveBackward();
-                }else if(event.data.direction ==='LEFT')
-                {
+                } else if (event.data.direction === 'LEFT') {
                     this._moveLeft();
-                }else if(event.data.direction ==='RIGHT')
-                {
+                } else if (event.data.direction === 'RIGHT') {
                     this._moveRight();
                 }
             }
@@ -78,14 +73,11 @@ export default class KeyboardCameraController {
     onKeyDown = (event) => {
         if (event.keyCode === 38 /*|| event.keyCode === 87*/) {
             this._moveForward();
-        }
-        else if (event.keyCode === 40 /*|| event.keyCode === 83*/) {
+        } else if (event.keyCode === 40 /*|| event.keyCode === 83*/) {
             this._moveBackward();
-        }
-        else if (event.keyCode === 37 /*|| event.keyCode === 65*/) {
+        } else if (event.keyCode === 37 /*|| event.keyCode === 65*/) {
             this._moveLeft();
-        }
-        else if (event.keyCode === 39 /*|| event.keyCode === 68*/) {
+        } else if (event.keyCode === 39 /*|| event.keyCode === 68*/) {
             this._moveRight();
         }
     }
@@ -101,13 +93,11 @@ export default class KeyboardCameraController {
 
         const cameraObjectNotation = new ObjectNotation(position, quaternion);
 
-        if(this._movingZ !== 0)
-        {
+        if (this._movingZ !== 0) {
             cameraObjectNotation.translateZ(this._movingZ);
         }
 
-        if(this._movingX !== 0)
-        {
+        if (this._movingX !== 0) {
             cameraObjectNotation.translateX(this._movingX);
         }
 

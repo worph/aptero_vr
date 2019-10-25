@@ -1,7 +1,7 @@
 import React from 'react';
 import {View, asset} from 'react-360';
 import Point from "./Point";
-import {browserBridge} from "../module/BrowserBridge";
+import {browserBridge} from "../module/BrowserBridgeIndex";
 
 export default class Points extends React.Component<{}, { points: [], }> {
     state = {

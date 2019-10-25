@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import type {Controller, ControllerState} from "./ControllerService";
+import {convertQuaternionToEuler} from "../common/MathUtil";
 
 const PRIMARY_ACTION_BUTTON = 1;
 
@@ -16,6 +17,20 @@ export class GamepadController implements Controller {
         pressed: false,
         activated: true,
     };
+
+    lastButtonState = false;
+
+    isInputProcessed(): boolean {
+        return this.lastButtonState !== this.isPressed();
+    }
+
+    setInputProcessed(): void {
+        this.lastButtonState = this.isPressed();
+    }
+
+    getIndex() {
+        return this.index;
+    }
 
     constructor(index: number) {
         this.index = index;
@@ -57,17 +72,8 @@ export class GamepadController implements Controller {
         return gamepad.pose.orientation;
     }
 
-    convertQuaternionToEuler(quat: []): number[] {
-        this.quaternion.fromArray(quat);
-        this.euler.setFromQuaternion(this.quaternion);
-        this.lastRotation[0] = THREE.Math.radToDeg(this.euler.x);
-        this.lastRotation[1] = THREE.Math.radToDeg(this.euler.y);
-        this.lastRotation[2] = THREE.Math.radToDeg(this.euler.z);
-        return this.lastRotation;
-    }
-
     getRotation(): number[] {
-        return this.convertQuaternionToEuler(this.getQuaternion());
+        return convertQuaternionToEuler(this.getQuaternion());
     }
 
     getHandPointer(): number[] {

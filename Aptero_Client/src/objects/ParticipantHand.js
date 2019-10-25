@@ -2,7 +2,7 @@ import React from 'react';
 import {View, asset} from 'react-360';
 import Entity from 'Entity';
 
-import {browserBridge} from '../module/BrowserBridge';
+import {browserBridge} from '../module/BrowserBridgeIndex';
 import type {ControllerState} from "../controller/ControllerService";
 
 export default class ParticipantHand extends React.Component<{ id: string, startVisible: boolean}, {

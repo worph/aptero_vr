@@ -5,7 +5,6 @@ import {
     Text,
     View, VrButton,
 } from 'react-360';
-import {MODE_NOTE} from "../common/Color";
 
 export default class Note extends React.Component<{ id: string, position: { x: number, y: number, z: number, rx: number, ry: number, rz: number }, startVisible: boolean },
     {}> {
@@ -22,32 +21,22 @@ export default class Note extends React.Component<{ id: string, position: { x: n
 
     render() {
         return (
-            <View style={{
-                // Fill the entire surface
-                width: 0.5,
-                height: 0.5,
-                backgroundColor: 'rgba(255, 255, 0, 1)',
-                justifyContent: 'center',
-                alignItems: 'center',
-                position: 'absolute',
-                transform: [
-                    {translateX: this.props.position.x},
-                    {translateY: this.props.position.y},
-                    {translateZ: this.props.position.z},
-                    {rotateX: this.props.position.rx},
-                    {rotateY: this.props.position.ry},
-                    {rotateZ: this.props.position.rz},
-                ]
-            }}>
-                <Text style={styles.greeting}>
-                    Push the button and speak to add text {this.props.id}
-                </Text>
-                <VrButton onClick={(event) => {
-                    console.log("move")
-                }}><Text>Move</Text></VrButton>
-                <VrButton onClick={(event) => {
-                    console.log("edit");
-                }}><Text>Edit</Text></VrButton>
+            <View>
+                <View style={{
+                    // Fill the entire surface
+                    width: 0.5,
+                    height: 0.5,
+                    backgroundColor: 'rgba(255, 255, 0, 1)',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                }}>
+                    <Text style={styles.greeting}>
+                        Push the button and speak to add text {this.props.id}
+                    </Text>
+                    <VrButton onClick={(event) => {
+                        console.log("edit");
+                    }}><Text>Edit</Text></VrButton>
+                </View>
             </View>
         );
     }
