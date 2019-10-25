@@ -9,7 +9,7 @@ import Env from "./src/objects/Env";
 import ParticipantHand from "./src/objects/ParticipantHand";
 import Point from "./src/objects/Point";
 import Points from "./src/objects/Points";
-import {browserBridge, registerCallableModule} from "./src/module/BrowserBridgeIndex";
+import {browserBridgeIndex, registerCallableModule} from "./src/module/BrowserBridgeIndex";
 import HeadLockMenu360 from "./src/react/HeadLockMenu360";
 import Note from "./src/objects/Note";
 
@@ -26,4 +26,4 @@ AppRegistry.registerComponent('Note', ()=> Note);
 
 registerCallableModule();
 
-browserBridge.emit("test",{test:1});
+browserBridgeIndex.emit("test",{test:1});

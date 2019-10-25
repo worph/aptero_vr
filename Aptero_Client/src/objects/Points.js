@@ -1,7 +1,7 @@
 import React from 'react';
 import {View, asset} from 'react-360';
 import Point from "./Point";
-import {browserBridge} from "../module/BrowserBridgeIndex";
+import {browserBridgeIndex} from "../module/BrowserBridgeIndex";
 
 export default class Points extends React.Component<{}, { points: [], }> {
     state = {
@@ -21,11 +21,11 @@ export default class Points extends React.Component<{}, { points: [], }> {
         }
         this.setState({points:points})*/
 
-        browserBridge.onEvent("newPoint",(data) => {
+        browserBridgeIndex.onEvent("newPoint",(data) => {
             this.addPoint(data);
         });
 
-        browserBridge.onEvent("removePoint",(data) => {
+        browserBridgeIndex.onEvent("removePoint",(data) => {
             this.removePoint(data);
         });
     }

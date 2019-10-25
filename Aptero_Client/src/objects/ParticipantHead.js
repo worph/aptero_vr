@@ -4,7 +4,7 @@ import Entity from 'Entity';
 
 import {NativeModules} from 'react-360';
 const {ControllersModule} = NativeModules;
-import {browserBridge} from '../module/BrowserBridgeIndex';
+import {browserBridgeIndex} from '../module/BrowserBridgeIndex';
 
 export default class ParticipantHead extends React.Component<{ id: string, startVisible: boolean}, {
     visible: boolean,
@@ -18,7 +18,7 @@ export default class ParticipantHead extends React.Component<{ id: string, start
     };
 
     componentDidMount(): void {
-        browserBridge.onEvent("setHeadTransform",(data: {id: string, position: number[], rotation: number[]}) => {
+        browserBridgeIndex.onEvent("setHeadTransform",(data: {id: string, position: number[], rotation: number[]}) => {
             if(data.id===this.props.id) {
                 if(data.position.length===0 || data.rotation.length===0){
                     this.setState({visible:false});

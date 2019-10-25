@@ -1,5 +1,4 @@
 import BatchedBridge from 'react-native/Libraries/BatchedBridge/BatchedBridge';
-import Module from "react-360-web/js/Modules/Module";
 import EventEmitter from "eventemitter3";
 import {NativeModules} from "react-360";
 
@@ -13,32 +12,34 @@ export const BRIDGE_NAME = "BrowserBridge";
 
 const {BrowserBridgeNativeModule} = NativeModules;
 
-export function registerCallableModule(){
-    BatchedBridge.registerCallableModule(BRIDGE_NAME, browserBridge); //Call this in client js maybe?
+export function registerCallableModule() {
+    BatchedBridge.registerCallableModule(BRIDGE_NAME, new BrowserBridge()); //Call this in client js maybe?
 }
+
+let eventEmitter = new EventEmitter();
 
 export class BrowserBridge {
 
-    eventEmitter = new EventEmitter();
-
-    constructor() {
-        this._subscribers = {};
-    }
-
-    onEvent(eventName: string, handler: (data: any)=>void) {
-        this.eventEmitter.on(eventName,handler);
-        return () => {
-            this.eventEmitter.off(eventName,handler);
-        };
-    }
-
-    emit(event:string,data:any){
-        BrowserBridgeNativeModule._notifyEvent(event,data);
-    }
-
-    _notifyEvent(eventName, eventData) {
-        this.eventEmitter.emit(eventName,eventData)
+    notifyEventToIndex(eventName, eventData) {
+        eventEmitter.emit(eventName, eventData)
     }
 }
 
-export const browserBridge = new BrowserBridge();
+
+export class BrowserBridgeIndex {
+
+    onEvent(eventName: string, handler: (data: any)=>void) {
+        eventEmitter.on(eventName, handler);
+        return () => {
+            eventEmitter.off(eventName, handler);
+        };
+    }
+
+    emit(event: string, data: any) {
+        BrowserBridgeNativeModule.notifyEventInternal(event, data);
+    }
+
+}
+
+
+export const browserBridgeIndex = new BrowserBridgeIndex();

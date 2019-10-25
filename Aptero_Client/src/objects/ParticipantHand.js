@@ -2,7 +2,7 @@ import React from 'react';
 import {View, asset} from 'react-360';
 import Entity from 'Entity';
 
-import {browserBridge} from '../module/BrowserBridgeIndex';
+import {browserBridgeIndex} from '../module/BrowserBridgeIndex';
 import type {ControllerState} from "../controller/ControllerService";
 
 export default class ParticipantHand extends React.Component<{ id: string, startVisible: boolean}, {
@@ -20,7 +20,7 @@ export default class ParticipantHand extends React.Component<{ id: string, start
 
     componentDidMount(): void {
         this.handId = this.props.handId;
-        browserBridge.onEvent("setHandTransform",(data:ControllerState) => {
+        browserBridgeIndex.onEvent("setHandTransform",(data:ControllerState) => {
             if(data.handId===this.handId) {
                 this.setTransform(data.position, data.rotation);
                 this.setState({visible:data.activated})
