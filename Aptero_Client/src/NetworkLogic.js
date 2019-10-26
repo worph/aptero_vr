@@ -5,13 +5,13 @@ import {PeerjsService} from "./service/PeerjsService";
 import {controllerService} from "./controller/ControllerService";
 import {RoomsAPI} from "./service/RoomsAPI";
 import {NoteService} from "./service/NoteService";
-import {HandProcessor} from "./HandProcessor";
+import {HandProcessor} from "./service/HandProcessor";
+import {browserBridgeClient} from "./module/BrowserBridgeClient";
 
 let FPS24 = 1000 / 24;
 
 export class NetworkLogic {
     bridgeModule;
-    colorModule;
     r360;
     noteService: NoteService;
     paint3d:Paint3dDrawService;
@@ -19,13 +19,12 @@ export class NetworkLogic {
 
     peerJsService: PeerjsService;
 
-    constructor(paint3d:Paint3dDrawService,noteService: NoteService,bridgeModule,colorModule,r360) {
+    constructor(paint3d:Paint3dDrawService,noteService: NoteService,r360) {
         this.noteService = noteService;
         this.paint3d = paint3d;
-        this.bridgeModule = bridgeModule;
-        this.colorModule = colorModule;
+        this.bridgeModule = browserBridgeClient;
         this.r360 = r360;
-        this.handProcessor = new HandProcessor(r360,bridgeModule);
+        this.handProcessor = new HandProcessor(r360);
     }
 
     loadPersistentData() {

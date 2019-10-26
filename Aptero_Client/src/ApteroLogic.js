@@ -7,8 +7,6 @@ import {NetworkLogic} from "./NetworkLogic";
 import {LocalLogic} from "./LocalLogic";
 
 export class ApteroLogic {
-    bridgeModule;
-    colorModule;
     r360;
 
     peerJsService: PeerjsService;
@@ -32,8 +30,8 @@ export class ApteroLogic {
         );
         this.paint3d = new Paint3dDrawService();
         this.noteService = new NoteService(this.r360);
-        this.localLogic = new LocalLogic(this.paint3d,this.noteService,this.bridgeModule,this.colorModule,this.r360);
-        this.networkLogic = new NetworkLogic(this.paint3d,this.noteService,this.bridgeModule,this.colorModule,this.r360);
+        this.localLogic = new LocalLogic(this.paint3d,this.noteService,this.r360);
+        this.networkLogic = new NetworkLogic(this.paint3d,this.noteService,this.r360);
         this.networkLogic.setupNetwork().then(value => {
             this.localLogic.ownerId = this.networkLogic.peerJsService.getMyPeerJsId();
         });
@@ -68,7 +66,7 @@ export class ApteroLogic {
     }
 
     checkReady(){
-        if(this.r360 && this.bridgeModule && this.colorModule){
+        if(this.r360){
             this.setup();
             this.ready = true;
             console.log("ready");
@@ -77,16 +75,6 @@ export class ApteroLogic {
 
     setReact360(r360) {
         this.r360 = r360;
-        this.checkReady();
-    }
-
-    setBridgeModule(bridgeModule) {
-        this.bridgeModule = bridgeModule;
-        this.checkReady();
-    }
-
-    setColorModule(colorModule) {
-        this.colorModule = colorModule;
         this.checkReady();
     }
 }

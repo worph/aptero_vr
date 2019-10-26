@@ -5,17 +5,25 @@ import {
     Text,
     View, VrButton,
 } from 'react-360';
+import {browserBridgeIndex} from "../module/BrowserBridgeIndex";
 
 export default class Note extends React.Component<{ id: string, position: { x: number, y: number, z: number, rx: number, ry: number, rz: number }, startVisible: boolean },
     {}> {
-    id: string = this.props.id;
     state = {
-        position: {}
+        position: {},
+        editing: false,
+        text: "Click to edit text",
     };
+    id: string = this.props.id;
 
     componentWillMount(): void {
         this.setState({
             position: this.props.position
+        });
+        browserBridgeIndex.onEvent("changeText", data => {
+            if (data.id === this.props.id) {
+                this.setState({text: data.text});
+            }
         })
     }
 
@@ -24,18 +32,24 @@ export default class Note extends React.Component<{ id: string, position: { x: n
             <View>
                 <View style={{
                     // Fill the entire surface
-                    width: 0.5,
-                    height: 0.5,
+                    width: 0.25,
+                    height: 0.25,
                     backgroundColor: 'rgba(255, 255, 0, 1)',
                     justifyContent: 'center',
                     alignItems: 'center',
                 }}>
-                    <Text style={styles.greeting}>
-                        Push the button and speak to add text {this.props.id}
-                    </Text>
-                    <VrButton onClick={(event) => {
-                        console.log("edit");
-                    }}><Text>Edit</Text></VrButton>
+                    <VrButton style={styles.buttonNote} onClick={(event) => {
+                        if (this.state.editing) {
+                            this.setState({editing: false});
+                            browserBridgeIndex.emit("stopEditText", {id: this.props.id});
+                        } else {
+                            this.setState({editing: true});
+                            browserBridgeIndex.emit("startEditText", {id: this.props.id});
+                        }
+                    }}><Text style={styles.buttonTextNote}>
+                        Note: {this.props.id}
+                        {!this.state.editing ? this.state.text : "Speak and click again on the note when finished."}
+                    </Text></VrButton>
                 </View>
             </View>
         );
@@ -56,8 +70,14 @@ const styles = StyleSheet.create({
         borderColor: '#639dda',
         borderWidth: 2,
     },
-    greeting: {
-        fontSize: 0.051,
+    buttonNote: {
+        height: "100%",
+        width: "100%",
+    },
+    buttonTextNote: {
+        fontSize: 0.025,
+        height: "100%",
+        width: "100%",
         color: '#000000'
     },
 });

@@ -1,4 +1,5 @@
-import type {ControllerState} from "./controller/ControllerService";
+import type {ControllerState} from "../controller/ControllerService";
+import {browserBridgeClient} from "../module/BrowserBridgeClient";
 
 export class HandProcessor {
 
@@ -9,9 +10,9 @@ export class HandProcessor {
     r360;
     bridgeModule;
 
-    constructor(r360, bridgeModule) {
+    constructor(r360) {
         this.r360 = r360;
-        this.bridgeModule = bridgeModule;
+        this.bridgeModule = browserBridgeClient;
     }
 
     /*

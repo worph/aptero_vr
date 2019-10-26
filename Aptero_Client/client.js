@@ -7,7 +7,6 @@ require("babel-core/register");
 require("babel-polyfill");
 
 import {ReactInstance} from 'react-360-web';
-import {ColorModule} from "./src/module/ColorModule";
 import {ApteroLogic} from "./src/ApteroLogic";
 
 function init(bundle, parent) {
@@ -24,14 +23,8 @@ function init(bundle, parent) {
         nativeModules: [
             ctx => {
                 let bridgeModule = new BrowserBridgeNativeModule(ctx);
-                apteroLogic.setBridgeModule(bridgeModule);
                 return bridgeModule;
             },
-            ctx => {
-                let colorModule = new ColorModule(ctx);
-                apteroLogic.setColorModule(colorModule);
-                return colorModule;
-            }
         ]
     });
     apteroLogic.setReact360(r360);

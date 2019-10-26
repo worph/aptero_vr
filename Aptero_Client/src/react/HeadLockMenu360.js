@@ -4,11 +4,9 @@ import {
     Text,
     View,
     VrButton,
-    NativeModules,
 } from 'react-360';
 import {BLACK, BLUE, CYAN, GREEN, MODE_DRAW, MODE_ERASE, MODE_NOTE, PINK, RED, WHITE, YELLOW} from "../common/Color";
-
-const {ColorModule} = NativeModules;
+import {browserBridgeIndex} from "../module/BrowserBridgeIndex";
 
 export default class HeadLockMenu360 extends React.Component {
 
@@ -18,18 +16,18 @@ export default class HeadLockMenu360 extends React.Component {
         mode: MODE_DRAW
     };
 
-    setColor(event,color: string) {
+    setColor(event, color: string) {
         event.preventDefault();
         event.stopPropagation();
-        ColorModule.setColor(color);
         this.setState({color: color})
+        browserBridgeIndex.emit("colorChange", color);
     }
 
-    setMode(event,mode: string) {
+    setMode(event, mode: string) {
         event.preventDefault();
         event.stopPropagation();
-        ColorModule.setMode(mode);
         this.setState({mode: mode})
+        browserBridgeIndex.emit("modeChange", mode);
     }
 
 
@@ -47,61 +45,67 @@ export default class HeadLockMenu360 extends React.Component {
                             </Text>
                         </View>
 
-                        {this.state.mode=== MODE_DRAW &&
-                            <View style={styles.colorsBox}>
-                                <VrButton style={this.state.color === RED ? styles.redSelected : styles.red}
-                                          onClick={(event) => {
-                                              this.setColor(event,RED)
-                                          }}>
-                                </VrButton>
-                                <VrButton style={this.state.color === GREEN ? styles.greenSelected : styles.green}
-                                          onClick={(event) => {
-                                              this.setColor(event,GREEN)
-                                          }}>
-                                </VrButton>
-                                <VrButton style={this.state.color === BLUE ? styles.blueSelected : styles.blue}
-                                          onClick={(event) => {
-                                              this.setColor(event,BLUE)
-                                          }}>
-                                </VrButton>
-                                <VrButton style={this.state.color === PINK ? styles.pinkSelected : styles.pink}
-                                          onClick={(event) => {
-                                              this.setColor(event,PINK)
-                                          }}>
-                                </VrButton>
-                                <VrButton style={this.state.color === YELLOW ? styles.yellowSelected : styles.yellow}
-                                          onClick={(event) => {
-                                              this.setColor(event,YELLOW)
-                                          }}>
-                                </VrButton>
-                                <VrButton style={this.state.color === CYAN ? styles.cyanSelected : styles.cyan}
-                                          onClick={(event) => {
-                                              this.setColor(event,CYAN)
-                                          }}>
-                                </VrButton>
-                                <VrButton style={this.state.color === BLACK ? styles.blackSelected : styles.black}
-                                          onClick={(event) => {
-                                              this.setColor(event,BLACK)
-                                          }}>
-                                </VrButton>
-                                <VrButton style={this.state.color === WHITE ? styles.whiteSelected : styles.white}
-                                          onClick={(event) => {
-                                              this.setColor(event,WHITE)
-                                          }}>
-                                </VrButton>
-                            </View>
+                        {this.state.mode === MODE_DRAW &&
+                        <View style={styles.colorsBox}>
+                            <VrButton style={this.state.color === RED ? styles.redSelected : styles.red}
+                                      onClick={(event) => {
+                                          this.setColor(event, RED)
+                                      }}>
+                            </VrButton>
+                            <VrButton style={this.state.color === GREEN ? styles.greenSelected : styles.green}
+                                      onClick={(event) => {
+                                          this.setColor(event, GREEN)
+                                      }}>
+                            </VrButton>
+                            <VrButton style={this.state.color === BLUE ? styles.blueSelected : styles.blue}
+                                      onClick={(event) => {
+                                          this.setColor(event, BLUE)
+                                      }}>
+                            </VrButton>
+                            <VrButton style={this.state.color === PINK ? styles.pinkSelected : styles.pink}
+                                      onClick={(event) => {
+                                          this.setColor(event, PINK)
+                                      }}>
+                            </VrButton>
+                            <VrButton style={this.state.color === YELLOW ? styles.yellowSelected : styles.yellow}
+                                      onClick={(event) => {
+                                          this.setColor(event, YELLOW)
+                                      }}>
+                            </VrButton>
+                            <VrButton style={this.state.color === CYAN ? styles.cyanSelected : styles.cyan}
+                                      onClick={(event) => {
+                                          this.setColor(event, CYAN)
+                                      }}>
+                            </VrButton>
+                            <VrButton style={this.state.color === BLACK ? styles.blackSelected : styles.black}
+                                      onClick={(event) => {
+                                          this.setColor(event, BLACK)
+                                      }}>
+                            </VrButton>
+                            <VrButton style={this.state.color === WHITE ? styles.whiteSelected : styles.white}
+                                      onClick={(event) => {
+                                          this.setColor(event, WHITE)
+                                      }}>
+                            </VrButton>
+                        </View>
                         }
 
                         <View style={styles.colorsModeBox}>
-                            <VrButton style={this.state.mode=== MODE_DRAW? styles.modeButtonSelected : styles.modeButton} onClick={(event) => {
-                                this.setMode(event,MODE_DRAW)
-                            }}><Text>Draw</Text></VrButton>
-                            <VrButton style={this.state.mode=== MODE_ERASE? styles.modeButtonSelected : styles.modeButton} onClick={(event) => {
-                                this.setMode(event,MODE_ERASE)
-                            }}><Text>Erase</Text></VrButton>
-                            <VrButton style={this.state.mode=== MODE_NOTE? styles.modeButtonSelected : styles.modeButton} onClick={(event) => {
-                                this.setMode(event,MODE_NOTE)
-                            }}><Text>Note</Text></VrButton>
+                            <VrButton
+                                style={this.state.mode === MODE_DRAW ? styles.modeButtonSelected : styles.modeButton}
+                                onClick={(event) => {
+                                    this.setMode(event, MODE_DRAW)
+                                }}><Text>Draw</Text></VrButton>
+                            <VrButton
+                                style={this.state.mode === MODE_ERASE ? styles.modeButtonSelected : styles.modeButton}
+                                onClick={(event) => {
+                                    this.setMode(event, MODE_ERASE)
+                                }}><Text>Erase</Text></VrButton>
+                            <VrButton
+                                style={this.state.mode === MODE_NOTE ? styles.modeButtonSelected : styles.modeButton}
+                                onClick={(event) => {
+                                    this.setMode(event, MODE_NOTE)
+                                }}><Text>Note</Text></VrButton>
                         </View>
                     </View>
                 }
@@ -128,23 +132,23 @@ const styles = StyleSheet.create({
     },
     colorsModeBox: {
         flex: 1, flexDirection: 'row',
-        marginTop:0,
-        marginBottom:20,
-        marginLeft:20,
-        marginRight:20
+        marginTop: 0,
+        marginBottom: 20,
+        marginLeft: 20,
+        marginRight: 20
     },
     colorsBox: {
         flex: 1, flexDirection: 'row',
-        marginTop:0,
-        marginBottom:0,
-        marginLeft:20,
-        marginRight:20
+        marginTop: 0,
+        marginBottom: 0,
+        marginLeft: 20,
+        marginRight: 20
     },
     modeButton: {
-        marginLeft:20,
-        marginRight:20,
+        marginLeft: 20,
+        marginRight: 20,
         width: 200,
-        height:50,
+        height: 50,
         backgroundColor: '#000000',
         borderColor: '#639dda',
         borderWidth: 2,
@@ -152,10 +156,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     modeButtonSelected: {
-        marginLeft:20,
-        marginRight:20,
+        marginLeft: 20,
+        marginRight: 20,
         width: 200,
-        height:50,
+        height: 50,
         backgroundColor: '#000000',
         borderColor: '#dacc00',
         borderWidth: 2,

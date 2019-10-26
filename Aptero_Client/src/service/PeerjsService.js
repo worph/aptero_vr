@@ -2,7 +2,6 @@
 import $ from "jquery";
 import EventEmitter from 'eventemitter3';
 import {RoomsAPI} from "./RoomsAPI";
-import axios from "axios";
 
 navigator.getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
 

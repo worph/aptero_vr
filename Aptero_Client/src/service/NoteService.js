@@ -2,6 +2,8 @@ import {Surface, Location} from "react-360-web";
 import EventEmitter from "eventemitter3";
 import {convertEulerToQuaternion} from "../common/MathUtil";
 import * as d3 from "d3-octree";
+import {browserBridgeClient} from "../module/BrowserBridgeClient";
+import {SpeechToTextService} from "./SpeechToTextService";
 
 export interface Note3dData {
     id: number;
@@ -16,10 +18,11 @@ export class NoteService {
     eventEmitter = new EventEmitter();
     octree = null;
 
-    nextNoteId = 0;
+    nextNoteId:number = 0;
     lastNoteAdded = new Date().getTime();
     noteData: { [id: number]: Note3dData } = {};
     selectedNoteData: { [id: number]: Note3dData } = {};
+    speechToTextService:SpeechToTextService = new SpeechToTextService();
 
     constructor(r360) {
         this.r360 = r360;
@@ -33,6 +36,18 @@ export class NoteService {
         this.octree.z((d) => {
             return d.z
         });
+        browserBridgeClient.onEvent("startEditText",data=>{
+            let id = data.id;
+            console.log("startEditText");
+            this.speechToTextService.startRecording();
+        });
+        browserBridgeClient.onEvent("stopEditText",data=>{
+            let id = data.id;
+            console.log("stopEditText");
+            this.speechToTextService.stopRecording();
+            browserBridgeClient.emit("changeText",{id:id,text:"newText"})
+        });
+        this.speechToTextService.start();
     }
 
     onAdded(callback: (id: number)=>void): ()=>void {
