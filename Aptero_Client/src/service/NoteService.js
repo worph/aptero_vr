@@ -44,8 +44,12 @@ export class NoteService {
         browserBridgeClient.onEvent("stopEditText",data=>{
             let id = data.id;
             console.log("stopEditText");
-            this.speechToTextService.stopRecording();
-            browserBridgeClient.emit("changeText",{id:id,text:"newText"})
+            browserBridgeClient.emit("changeText",{id:id,text:"processing..."});
+            this.speechToTextService.stopRecordingAndGetText().then(text => {
+                browserBridgeClient.emit("changeText",{id:id,text:text})
+            }).catch(error => {
+                browserBridgeClient.emit("changeText",{id:id,text:"server error please try again"})
+            });
         });
         this.speechToTextService.start();
     }

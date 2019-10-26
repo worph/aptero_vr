@@ -47,7 +47,7 @@ export default class Note extends React.Component<{ id: string, position: { x: n
                             browserBridgeIndex.emit("startEditText", {id: this.props.id});
                         }
                     }}><Text style={styles.buttonTextNote}>
-                        Note: {this.props.id}
+                        Note: {this.props.id+"\n"}
                         {!this.state.editing ? this.state.text : "Speak and click again on the note when finished."}
                     </Text></VrButton>
                 </View>
