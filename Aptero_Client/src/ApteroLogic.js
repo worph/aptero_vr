@@ -33,7 +33,9 @@ export class ApteroLogic {
         this.localLogic = new LocalLogic(this.paint3d,this.noteService,this.r360);
         this.networkLogic = new NetworkLogic(this.paint3d,this.noteService,this.r360);
         this.networkLogic.setupNetwork().then(value => {
-            this.localLogic.ownerId = this.networkLogic.peerJsService.getMyPeerJsId();
+            let peerjsId = this.networkLogic.peerJsService.getMyPeerJsId();
+            this.localLogic.ownerId = peerjsId;
+            this.noteService.owner = peerjsId;
         });
         /*
         * Create room environement and menu

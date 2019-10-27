@@ -7,6 +7,7 @@ import {RoomsAPI} from "./service/RoomsAPI";
 import {NoteService} from "./service/NoteService";
 import {HandProcessor} from "./service/HandProcessor";
 import {browserBridgeClient} from "./module/BrowserBridgeClient";
+import type {NoteDTOData} from "./service/NoteService";
 
 let FPS24 = 1000 / 24;
 
@@ -14,12 +15,12 @@ export class NetworkLogic {
     bridgeModule;
     r360;
     noteService: NoteService;
-    paint3d:Paint3dDrawService;
+    paint3d: Paint3dDrawService;
     handProcessor: HandProcessor;
 
     peerJsService: PeerjsService;
 
-    constructor(paint3d:Paint3dDrawService,noteService: NoteService,r360) {
+    constructor(paint3d: Paint3dDrawService, noteService: NoteService, r360) {
         this.noteService = noteService;
         this.paint3d = paint3d;
         this.bridgeModule = browserBridgeClient;
@@ -37,10 +38,9 @@ export class NetworkLogic {
         console.log("finished persistent data");*/
     }
 
-    setupIncomingEventListeners(){
-
+    setupPlayerState() {
         /*
-         * Handle network event
+         * Recv player state
          */
         this.peerJsService.eventEmitter.on("new_user", (event: {
             event: string,
@@ -48,41 +48,17 @@ export class NetworkLogic {
                 id: string
             }
         }) => {
-            let id = event.data.id;
-            this.r360.renderToLocation(
-                this.r360.createRoot("ParticipantHead", {
-                    id: id, startVisible: true
-                }),
-                this.r360.getDefaultLocation()
-            );
-        });
-
-        this.peerJsService.eventEmitter.on("new_point", (event: {
-            event: string,
-            data: { id: string, x: number, y: number, z: number, color: string }
-        }) => {
-            let point = event.data;
-            this.paint3d.addPointIfNotPresent(point.x, point.y, point.z, POINT_RADIUS, point);
-        });
-
-        this.peerJsService.eventEmitter.on("remove_point", (event: {
-            event: string,
-            data: { id: string, x: number, y: number, z: number, color: string }
-        }) => {
-            let point = event.data;
-            this.paint3d.removePointNear(point.x, point.y, point.z, POINT_RADIUS);
-        });
-
-
-        this.peerJsService.eventEmitter.on("disconnected", (event: {
-            event: "disconnected",
-            data: {
-                id: string
+            let data = event.data;
+            if (data.origin !== this.peerJsService.peerjs.id) {
+                let id = data.id;
+                this.r360.renderToLocation(
+                    this.r360.createRoot("ParticipantHead", {
+                        id: id, startVisible: true
+                    }),
+                    this.r360.getDefaultLocation()
+                );
             }
-        }) => {
-            this.bridgeModule.emit("setHeadTransform", {id: event.data.id, position: [], rotation: []});
         });
-
         this.peerJsService.eventEmitter.on("player_state", (event: {
             event: "player_state",
             data: {
@@ -98,25 +74,165 @@ export class NetworkLogic {
                 }
             }
         }) => {
-            let id = event.data.id;
-            let position = event.data.position;
-            let rotation = event.data.rotation;
-            this.bridgeModule.emit("setHeadTransform", {id: id, position: position, rotation: rotation});
-            let hands = event.data.hands;
-            Object.keys(hands).forEach((handId) => {
-                this.processHand(id, handId, hands[handId]);
+            let data = event.data;
+            if (data.origin !== this.peerJsService.peerjs.id) {
+                let id = event.data.id;
+                let position = event.data.position;
+                let rotation = event.data.rotation;
+                this.bridgeModule.emit("setHeadTransform", {id: id, position: position, rotation: rotation});
+                let hands = event.data.hands;
+                Object.keys(hands).forEach((handId) => {
+                    let handPos = hands[handId].position;
+                    let handRot = hands[handId].rotation;
+                    this.handProcessor.processHand(id, handId, hands[handId]);
+                    this.noteService.moveSelectedNote(id, handId, handPos[0], handPos[1], handPos[2], handRot);
+                });
+            }
+
+        });
+        /*
+         * Send player state
+         */
+        let payload = {id: this.peerJsService.getMyPeerJsId(), hands: {}};
+        //network loop at 24 FPS
+        setInterval(() => {
+            /*hands*/
+            controllerService.getGamepads().forEach(gamepad => {
+                if (gamepad.isVRReady()) {
+                    let state = gamepad.getControllerState();
+                    payload.hands[gamepad.index] = state;
+                }
             });
 
+            /*send data*/
+            payload.id = this.peerJsService.getMyPeerJsId();
+            payload.position = this.r360._cameraPosition;
+            payload.rotation = rotateByQuaternion(this.r360._cameraQuat);
+            this.peerJsService.broadcastData("player_state", payload);
+        }, FPS24);
+    }
+
+    setupPaint3dService() {
+        this.peerJsService.eventEmitter.on("new_point", (event: {
+            event: string,
+            data: { id: string, x: number, y: number, z: number, color: string }
+        }) => {
+            let point = event.data;
+            let data = event.data;
+            if (data.origin !== this.peerJsService.peerjs.id) {
+                this.paint3d.addPointIfNotPresent(point.x, point.y, point.z, POINT_RADIUS, point);
+            }
+        });
+        this.paint3d.onPointAdded(data => {
+            this.bridgeModule.emit("newPoint", data);
+            if (data.origin === this.peerJsService.peerjs.id) {
+                //if we created the point we broadcast to others
+                this.peerJsService.broadcastData("new_point", data);
+                this.peerJsService.updateRoomData(data.id, data);
+            }
+        });
+
+        this.peerJsService.eventEmitter.on("remove_point", (event: {
+            event: string,
+            data: { id: string, x: number, y: number, z: number, color: string }
+        }) => {
+            let point = event.data;
+            let data = event.data;
+            if (data.origin !== this.peerJsService.peerjs.id) {
+                this.paint3d.removePointNear(point.x, point.y, point.z, POINT_RADIUS);
+            }
+        });
+        this.paint3d.onPointRemoved(data => {
+            this.bridgeModule.emit("removePoint", data);
+            if (data.origin === this.peerJsService.peerjs.id) {
+                //if we created the point we broadcast to others
+                this.peerJsService.broadcastData("remove_point", data);
+            }
         });
     }
 
-    setupNetwork():Promise<string> {
+    setupNoteService() {
+        /*
+         * Note service
+         */
+        this.peerJsService.eventEmitter.on("new_note", (event: { event: string, data: NoteDTOData }) => {
+            let data = event.data;
+            if (data.origin !== this.peerJsService.peerjs.id) {
+                this.noteService.createNoteAt(data.origin, data.hand, data.x, data.y, data.z, data.rx, data.ry, data.rz, false, data.id);
+            }
+        });
+        this.noteService.onAdded((data: NoteDTOData) => {
+            if (data.origin === this.peerJsService.peerjs.id) {
+                //if we created the point we broadcast to others
+                this.peerJsService.broadcastData("new_note", data);
+            }
+        });
+
+        this.peerJsService.eventEmitter.on("note_select", (event: { event: string, data: { id: string, origin: string, hand: number } }) => {
+            let data = event.data;
+            if (data.origin !== this.peerJsService.peerjs.id) {
+                this.noteService.selectNote(data.origin, data.hand, data.id);
+            }
+        });
+        this.noteService.onSelect((data: { id: string, origin: string, hand: number }) => {
+            if (data.origin === this.peerJsService.peerjs.id) {
+                this.peerJsService.broadcastData("note_select", data);
+            }
+        });
+
+        this.peerJsService.eventEmitter.on("note_deselect", (event: { event: string, data: { id: string, origin: string, hand: number } }) => {
+            let data = event.data;
+            if (data.origin !== this.peerJsService.peerjs.id) {
+                this.noteService.deselectOwnedNote(data.origin, data.hand);
+            }
+        });
+        this.noteService.onDeselect((data: { id: string, origin: string, hand: number }) => {
+            if (data.origin === this.peerJsService.peerjs.id) {
+                this.peerJsService.broadcastData("note_deselect", data);
+            }
+        });
+
+        this.peerJsService.eventEmitter.on("note_text", (event: { event: string, data: { id: string, origin: string, text: string } }) => {
+            let data = event.data;
+            if (data.origin !== this.peerJsService.peerjs.id) {
+                this.noteService.changeText(data.origin, data.id, data.text);
+            }
+        });
+        this.noteService.onChangeText((data: { id: string, origin: string, text: string }) => {
+            if (data.origin === this.peerJsService.peerjs.id) {
+                this.peerJsService.broadcastData("note_text", data);
+            }
+        });
+    }
+
+    setupDisconnectService() {
+        /*
+         * RECV network event
+         */
+        this.peerJsService.eventEmitter.on("disconnected", (event: {
+            event: "disconnected",
+            data: {
+                id: string
+            }
+        }) => {
+            this.bridgeModule.emit("setHeadTransform", {id: event.data.id, position: [], rotation: []});
+        });
+        /*
+         * SEND network event
+         */
+
+        window.onunload = () => {
+            this.peerJsService.roomApi.unregisterIdWithServerAPI(this.peerJsService.getCurrentRoomId(), this.peerJsService.getMyPeerJsId())
+        };
+    }
+
+    setupNetwork(): Promise<string> {
         return new Promise((resolve, reject) => {
 
             /*
              * Handle room connection
              */
-            let host = window.location.href.startsWith("https://") ? "https://meeting.aptero.co" : "http://127.0.0.1:6767";
+            let host = window.location.href.startsWith("https://") ? "https://meeting.aptero.co" : "http://127.0.0.1:6767";//TODO add parameters
             console.log("backend:" + host);
             let roomsAPI: RoomsAPI = new RoomsAPI(host);
             this.peerJsService = new PeerjsService(roomsAPI);
@@ -137,53 +253,10 @@ export class NetworkLogic {
                 })
             }
 
-            this.setupIncomingEventListeners();
-
-            /*
-             * send network event
-             */
-
-            window.onunload = () => {
-                this.peerJsService.roomApi.unregisterIdWithServerAPI(this.peerJsService.getCurrentRoomId(), this.peerJsService.getMyPeerJsId())
-            };
-
-            /* paint 3d */
-            this.paint3d.onPointAdded(data => {
-                this.bridgeModule.emit("newPoint", data);
-                if (data.origin === this.peerJsService.peerjs.id) {
-                    //if we created the point we broadcast to others
-                    this.peerJsService.broadcastData("new_point", data);
-                    this.peerJsService.updateRoomData(data.id, data);
-                }
-            });
-            this.paint3d.onPointRemoved(data => {
-                this.bridgeModule.emit("removePoint", data);
-                if (data.origin === this.peerJsService.peerjs.id) {
-                    //if we created the point we broadcast to others
-                    this.peerJsService.broadcastData("remove_point", data);
-                }
-            });
-
-            let payload = {id: this.peerJsService.getMyPeerJsId(), hands: {}};
-            //network loop at 24 FPS
-            setInterval(() => {
-                /*
-                 * network state logic
-                 */
-                /*hands*/
-                controllerService.getGamepads().forEach(gamepad => {
-                    if (gamepad.isVRReady()) {
-                        let state = gamepad.getControllerState();
-                        payload.hands[gamepad.index] = state;
-                    }
-                });
-
-                /*send data*/
-                payload.id = this.peerJsService.getMyPeerJsId();
-                payload.position = this.r360._cameraPosition;
-                payload.rotation = rotateByQuaternion(this.r360._cameraQuat);
-                this.peerJsService.broadcastData("player_state", payload);
-            }, FPS24);
+            this.setupDisconnectService();
+            this.setupPaint3dService();
+            this.setupNoteService();
+            this.setupPlayerState();
         })
     }
 }

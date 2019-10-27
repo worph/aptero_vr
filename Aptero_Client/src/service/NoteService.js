@@ -6,7 +6,7 @@ import {browserBridgeClient} from "../module/BrowserBridgeClient";
 import {SpeechToTextService} from "./SpeechToTextService";
 
 export interface Note3dData {
-    id: number;
+    id: string;
     x: number;
     y: number;
     z: number;
@@ -14,15 +14,28 @@ export interface Note3dData {
     root: any;
 }
 
+export interface NoteDTOData {
+    hand: number;
+    id: string;
+    x: number;
+    y: number;
+    z: number;
+    rx: number;
+    ry: number;
+    rz: number;
+    origin: string;
+}
+
 export class NoteService {
     eventEmitter = new EventEmitter();
     octree = null;
 
-    nextNoteId:number = 0;
+    nextNoteId: number = 0;
     lastNoteAdded = new Date().getTime();
-    noteData: { [id: number]: Note3dData } = {};
-    selectedNoteData: { [id: number]: Note3dData } = {};
-    speechToTextService:SpeechToTextService = new SpeechToTextService();
+    noteData: { [id: string]: Note3dData } = {};
+    selectedNoteData: { [id: string]: Note3dData } = {};
+    speechToTextService: SpeechToTextService = new SpeechToTextService();
+    owner: string;
 
     constructor(r360) {
         this.r360 = r360;
@@ -36,47 +49,63 @@ export class NoteService {
         this.octree.z((d) => {
             return d.z
         });
-        browserBridgeClient.onEvent("startEditText",data=>{
+        browserBridgeClient.onEvent("startEditText", data => {
             let id = data.id;
-            console.log("startEditText");
             this.speechToTextService.startRecording();
         });
-        browserBridgeClient.onEvent("stopEditText",data=>{
+        browserBridgeClient.onEvent("stopEditText", data => {
             let id = data.id;
-            console.log("stopEditText");
-            browserBridgeClient.emit("changeText",{id:id,text:"processing..."});
+            this.changeText(this.owner, id, "processing...");
             this.speechToTextService.stopRecordingAndGetText().then(text => {
-                browserBridgeClient.emit("changeText",{id:id,text:text})
+                this.changeText(this.owner, id, text);
             }).catch(error => {
-                browserBridgeClient.emit("changeText",{id:id,text:"server error please try again"})
+                this.changeText(this.owner, id, "server error please try again");
             });
         });
         this.speechToTextService.start();
     }
 
-    onAdded(callback: (id: number)=>void): ()=>void {
+    onAdded(callback: (data: NoteDTOData)=>void): ()=>void {
         this.eventEmitter.on("note_added", callback);
         return () => {
             this.eventEmitter.off("note_added", callback);
         }
     }
 
-    onRemoved(callback: (id: number)=>void): ()=>void {
-        this.eventEmitter.on("note_removed", callback);
+    onSelect(callback: (data: { id: string, origin: string, hand: number })=>void): ()=>void {
+        this.eventEmitter.on("note_selected", callback);
         return () => {
-            this.eventEmitter.off("note_removed", callback);
+            this.eventEmitter.off("note_selected", callback);
         }
     }
 
-    createNoteAt(x, y, z, rx, ry, rz, checkTime: boolean = true) {
-        let quatRot = convertEulerToQuaternion([rx, ry, rz]);
+    onDeselect(callback: (data: { id: string, origin: string, hand: number })=>void): ()=>void {
+        this.eventEmitter.on("note_deselected", callback);
+        return () => {
+            this.eventEmitter.off("note_deselected", callback);
+        }
+    }
+
+    onChangeText(callback: (data: { id: string, text: string, origin: string })=>void): ()=>void {
+        this.eventEmitter.on("note_text", callback);
+        return () => {
+            this.eventEmitter.off("note_text", callback);
+        }
+    }
+
+    createId(): string {
+        this.nextNoteId++;
+        return this.owner + this.nextNoteId;
+    }
+
+    createNoteAt(owner: string, hand: number, x: number, y: number, z: number, rx: number, ry: number, rz: number, checkTime: boolean = true, id: string = null) {
         if (checkTime && (new Date().getTime() - this.lastNoteAdded) <= 1000) {
             return;
-        }else{
+        } else {
             this.lastNoteAdded = new Date().getTime();
         }
-        let noteid = this.nextNoteId;
-        this.nextNoteId++;
+        let noteid = id ? id : this.createId();
+        let quatRot = convertEulerToQuaternion([rx, ry, rz]);
         let root = this.r360.createRoot('Note', {
             id: noteid, position: {x: x, y: y, z: z, rx: rx, ry: ry, rz: rz}
         });
@@ -86,68 +115,82 @@ export class NoteService {
         location.setWorldRotation(quatRot[0], quatRot[1], quatRot[2], quatRot[3]);
         let noteData = {id: noteid, location: location, root: root, x: x, y: y, z: z};
         this.noteData[noteid] = noteData;
-        this.deselectNote(noteid);//initialise in deselectedMode
-        //this.r360.renderToLocation(root,this.r360.getDefaultLocation());
-        /*const notePanel = new Surface(100, 100, Surface.SurfaceShape.Flat);
-        this.r360.renderToSurface(root, notePanel,"note"+this.nextNoteId);*/
+        this.selectNote(owner, hand,noteid);
+        this.deselectOwnedNote(owner, hand);//initialise in deselectedMode
+
+        let dto: NoteDTOData = {
+            id: noteid,
+            hand: hand,
+            x: x, y: y, z: z, rx: rx, ry: ry, rz: rz,
+            origin: owner,
+        };
+        this.eventEmitter.emit("note_added", dto);
     }
 
-    selectOrCreateNoteAt(owner: string, x: number, y: number, z: number, rx: number, ry: number, rz: number, radius: number, checkTime: boolean = true): void {
+    selectOrCreateNoteAt(owner: string, hand: number, x: number, y: number, z: number, rx: number, ry: number, rz: number, radius: number, checkTime: boolean = true): void {
         if (checkTime && (new Date().getTime() - this.lastNoteAdded) <= 1000) {
             return;
-        }else{
+        } else {
             this.lastNoteAdded = new Date().getTime();
         }
-        let deselected = this.deselectOwnedNote(owner);
-        if(!deselected) {
-            if (this.selectNearestNote(owner, x, y, z, radius) === -1) {
-                this.createNoteAt(x, y, z, rx, ry, rz, false);
+        let deselected = this.deselectOwnedNote(owner, hand);
+        if (!deselected) {
+            if (this.selectNearestNote(owner, hand, x, y, z, radius) === -1) {
+                this.createNoteAt(owner, hand, x, y, z, rx, ry, rz, false);
             }
         }
     }
 
-    selectNearestNote(owner: string, x: number, y: number, z: number, radius: number): number {
+    selectNearestNote(owner: string, hand: number, x: number, y: number, z: number, radius: number): string {
         let res: Note3dData = this.octree.find(x, y, z, radius);
         if (res) {
-            console.log("note selected : "+owner+" "+res.id);
-            this.selectedNoteData[owner] = res;
-            this.octree.remove(res);
-            return res.id;
+            this.selectNote(owner,hand,res.id);
         } else {
             return -1;
         }
     }
 
-    deselectOwnedNote(owner: string): boolean {
-        let noteData: Note3dData = this.selectedNoteData[owner];
-        if(noteData) {
-            console.log("note deselected : "+owner+" "+noteData.id);
-            delete this.selectedNoteData[owner];
-            this.deselectNote(noteData.id);
+    selectNote(owner: string, hand: number,id:string){
+        let res = this.noteData[id];
+        console.log("note selected : " + owner + " " + res.id);
+        this.eventEmitter.emit("note_selected", {id: res.id, origin: owner,hand:hand});
+        this.selectedNoteData[this.toSelectId(owner, hand)] = res;
+        this.octree.remove(res);
+        return res.id;
+    }
+
+    deselectOwnedNote(owner: string, hand: number): boolean {
+        let noteData: Note3dData = this.selectedNoteData[this.toSelectId(owner, hand)];
+        if (noteData) {
+            console.log("note deselected : " + owner + " " + noteData.id);
+            this.eventEmitter.emit("note_deselected", {id: noteData.id, origin: owner,hand:hand});
+            delete this.selectedNoteData[this.toSelectId(owner, hand)];
+            this.octree.add(noteData);
             return true;
-        }else{
+        } else {
             return false;
         }
     }
 
-    deselectNote(id: number): void {
-        let noteData = this.noteData[id];
-        this.octree.add(noteData);
+    toSelectId(owner: string, hand: number): string {
+        return owner + "-" + hand;
     }
 
-    moveSelectedNote(owner: string, x: number, y: number, z: number, eulerRotation) {
-        let noteData: Note3dData = this.selectedNoteData[owner];
+    moveSelectedNote(owner: string, hand: number, x: number, y: number, z: number, eulerRotation) {
+        let noteData: Note3dData = this.selectedNoteData[this.toSelectId(owner, hand)];
         if (noteData) {
             let rotQuat = convertEulerToQuaternion(eulerRotation);
-            this.moveNote(noteData.id, x, y, z, rotQuat);
+            let location = noteData.location;
+            location.setWorldPosition(x, y, z);
+            location.setWorldRotation(rotQuat[0], rotQuat[1], rotQuat[2], rotQuat[3]);
         }
     }
 
-    moveNote(id: number, x: number, y: number, z: number, rotQuat: number[]) {
-        let note = this.noteData[id];
-        let location = note.location;
-        location.setWorldPosition(x, y, z);
-        location.setWorldRotation(rotQuat[0], rotQuat[1], rotQuat[2], rotQuat[3]);
+    changeText(owner: string, id: string, text: string) {
+        this.eventEmitter.emit("note_text", {id: id, text: text, origin: owner});
+        browserBridgeClient.emit("changeText", {
+            id: id, text: text,
+        });
     }
 
 }
