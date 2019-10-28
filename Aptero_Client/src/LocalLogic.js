@@ -38,9 +38,9 @@ export class LocalLogic {
             let gstate = gamepad.getControllerState();
             if (gamepad.isVRReady() && this.ownerId) {
                 let handId = gamepad.index;
+                this.handProcessor.processHand(this.ownerId, handId, gstate);
                 let pos = gamepad.getHandPointer();
                 let rot = gamepad.getRotation();
-                this.handProcessor.processHand(this.ownerId, handId, gstate);
                 this.noteService.moveSelectedNote(this.ownerId , gamepad.index, pos[0], pos[1], pos[2], rot);
                 if (gstate.activated &&
                     gamepad.isPressed() &&
