@@ -37,6 +37,22 @@ export class NoteService {
     speechToTextService: SpeechToTextService = new SpeechToTextService();
     owner: string;
 
+    locations = [];
+
+    deltaX = 0;
+    deltaY = 0;
+    deltaZ = 0;
+
+    applyDelta(x,y,z){
+        this.locations.forEach(value => {
+            value.setWorldPosition(value.worldPosition[0]+x,value.worldPosition[1]+y,value.worldPosition[2]+z);
+        });
+        this.deltaX+=x;
+        this.deltaY+=y;
+        this.deltaZ+=z;
+    }
+
+
     constructor(r360) {
         this.r360 = r360;
         this.octree = d3.octree();
@@ -109,9 +125,10 @@ export class NoteService {
         let root = this.r360.createRoot('Note', {
             id: noteid, position: {x: x, y: y, z: z, rx: rx, ry: ry, rz: rz}
         });
-        let location = new Location([x, y, z], quatRot);
+        let location = new Location([x+this.deltaX, y+this.deltaY, z+this.deltaZ], quatRot);
+        this.locations.push(location);
         this.r360.renderToLocation(root, location);
-        location.setWorldPosition(x, y, z);
+        location.setWorldPosition(x+this.deltaX, y+this.deltaY, z+this.deltaZ);
         location.setWorldRotation(quatRot[0], quatRot[1], quatRot[2], quatRot[3]);
         let noteData = {id: noteid, location: location, root: root, x: x, y: y, z: z};
         this.noteData[noteid] = noteData;
@@ -186,12 +203,12 @@ export class NoteService {
         return owner + "-" + hand;
     }
 
-    moveSelectedNote(owner: string, hand: number, x: number, y: number, z: number, eulerRotation) {
+    moveSelectedNote(owner: string, hand: number, x: number, y: number, z: number, eulerRotation,delta:boolean) {
         let noteData: Note3dData = this.selectedNoteData[this.toSelectId(owner, hand)];
         if (noteData) {
             let rotQuat = convertEulerToQuaternion(eulerRotation);
             let location = noteData.location;
-            location.setWorldPosition(x, y, z);
+            location.setWorldPosition(x+(delta?this.deltaX:0), y+(delta?this.deltaY:0), z+(delta?this.deltaZ:0));
             location.setWorldRotation(rotQuat[0], rotQuat[1], rotQuat[2], rotQuat[3]);
         }
     }

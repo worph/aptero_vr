@@ -1,33 +1,11 @@
 import {Vector3, Quaternion} from 'three';
+import {ObjectNotation} from "./ObjectNotation";
 
 const MOVING_SPEED = 0.1;
 
-class ObjectNotation {
-    position = null;
-    quaternion = null;
+import EventEmitter from "eventemitter3";
 
-    constructor(position, quaternion) {
-        this.position = position;
-        this.quaternion = quaternion;
-    }
-
-    translateOnAxis = (axis, distance) => {
-        const v1 = new Vector3();
-        v1.copy(axis).applyQuaternion(this.quaternion);
-        this.position.add(v1.multiplyScalar(distance));
-    };
-
-    translateX = (distance) => {
-        this.translateOnAxis(new Vector3(1, 0, 0), distance);
-    };
-    translateY = (distance) => {
-        this.translateOnAxis(new Vector3(0, 1, 0), distance);
-    };
-    translateZ = (distance) => {
-        this.translateOnAxis(new Vector3(0, 0, 1), distance);
-    };
-}
-
+export const cameraControl = new EventEmitter();
 
 export default class KeyboardCameraController {
     _movingZ = 0;
@@ -35,58 +13,64 @@ export default class KeyboardCameraController {
 
     constructor() {
 
-
-        document.addEventListener('keydown', (event) => this.onKeyDown(event));
-
+        cameraControl.on("up", args => {
+            this._moveForward();
+        });
+        cameraControl.on("down", args => {
+            this._moveBackward();
+        });
+        cameraControl.on("left", args => {
+            this._moveLeft();
+        });
+        cameraControl.on("right", args => {
+            this._moveRight();
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.keyCode === 38 /*|| event.keyCode === 87*/) {
+                cameraControl.emit("up", {});
+            } else if (event.keyCode === 40 /*|| event.keyCode === 83*/) {
+                cameraControl.emit("down", {});
+            } else if (event.keyCode === 37 /*|| event.keyCode === 65*/) {
+                cameraControl.emit("left", {});
+            } else if (event.keyCode === 39 /*|| event.keyCode === 68*/) {
+                cameraControl.emit("right", {});
+            }
+        });
         window.addEventListener("message", (event) => {
             if (event.data.type === 'KEYBOARD_CAMERA_CONTROLLER_MESSAGE') {
                 if (event.data.direction === 'UP') {
-                    this._moveForward();
+                    cameraControl.emit("up", {});
                 } else if (event.data.direction === 'DOWN') {
-                    this._moveBackward();
+                    cameraControl.emit("down", {});
                 } else if (event.data.direction === 'LEFT') {
-                    this._moveLeft();
+                    cameraControl.emit("left", {});
                 } else if (event.data.direction === 'RIGHT') {
-                    this._moveRight();
+                    cameraControl.emit("right", {});
                 }
             }
         }, false);
     }
 
-    _moveForward = () => {
+    _moveForward() {
         this._movingZ = -MOVING_SPEED;
     }
 
-    _moveBackward = () => {
+    _moveBackward() {
         this._movingZ = MOVING_SPEED;
     }
 
-    _moveLeft = () => {
+    _moveLeft() {
         this._movingX = -MOVING_SPEED;
     }
 
-    _moveRight = () => {
+    _moveRight() {
         this._movingX = MOVING_SPEED;
-    }
-
-
-    onKeyDown = (event) => {
-        if (event.keyCode === 38 /*|| event.keyCode === 87*/) {
-            this._moveForward();
-        } else if (event.keyCode === 40 /*|| event.keyCode === 83*/) {
-            this._moveBackward();
-        } else if (event.keyCode === 37 /*|| event.keyCode === 65*/) {
-            this._moveLeft();
-        } else if (event.keyCode === 39 /*|| event.keyCode === 68*/) {
-            this._moveRight();
-        }
     }
 
     fillCameraProperties(positionArray, rotationArray) {
         if (this._movingZ === 0 && this._movingX === 0) {
             return false;
         }
-
 
         const quaternion = new Quaternion(rotationArray[0], rotationArray[1], rotationArray[2], rotationArray[3]);
         const position = new Vector3(positionArray[0], positionArray[1], positionArray[2]);
@@ -101,15 +85,14 @@ export default class KeyboardCameraController {
             cameraObjectNotation.translateX(this._movingX);
         }
 
-
         positionArray[0] = cameraObjectNotation.position.x;
         // positionArray[1] = cameraObjectNotation.position.y; // i don't want to fly
         positionArray[2] = cameraObjectNotation.position.z;
 
-
         this._movingZ = 0;
         this._movingX = 0;
 
+        console.log("here");
 
         return true;
     }

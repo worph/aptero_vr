@@ -13,3 +13,4 @@ export const BLACK = "black";
 export const MODE_DRAW = "draw";
 export const MODE_ERASE = "erase";
 export const MODE_NOTE = "note";
+export const MODE_MOVE = "MOVE";

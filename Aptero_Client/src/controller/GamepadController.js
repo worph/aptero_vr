@@ -44,6 +44,7 @@ export class GamepadController implements Controller {
 
 
     isPressedInternal(){
+        let gamepad = this.getGamepad();
         if (gamepad.buttons[PRIMARY_ACTION_BUTTON] && typeof gamepad.buttons[PRIMARY_ACTION_BUTTON] === 'object') {
             return gamepad.buttons[PRIMARY_ACTION_BUTTON].pressed;
         } else {
@@ -72,9 +73,11 @@ export class GamepadController implements Controller {
 
     getPosition(): number[] {
         const gamepad = this.getGamepad();
-        this.lastPosition[0] = gamepad.pose.position[0];
-        this.lastPosition[1] = gamepad.pose.position[1];
-        this.lastPosition[2] = gamepad.pose.position[2];
+        if(gamepad.pose.position) {
+            this.lastPosition[0] = gamepad.pose.position[0];
+            this.lastPosition[1] = gamepad.pose.position[1];
+            this.lastPosition[2] = gamepad.pose.position[2];
+        }
         return this.lastPosition;
     }
 
@@ -85,7 +88,11 @@ export class GamepadController implements Controller {
 
     getQuaternion(): number[] {
         const gamepad = this.getGamepad();
-        return gamepad.pose.orientation;
+        if(gamepad.pose.orientation) {
+            return gamepad.pose.orientation;
+        }else{
+            return [0,0,0,0];
+        }
     }
 
     getRotation(): number[] {

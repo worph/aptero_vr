@@ -8,6 +8,8 @@ import {NoteService} from "./service/NoteService";
 import {HandProcessor} from "./service/HandProcessor";
 import {browserBridgeClient} from "./module/BrowserBridgeClient";
 import type {NoteDTOData} from "./service/NoteService";
+import {Location} from "react-360-web";
+import {globalMove} from "./service/GlobalMove";
 
 let FPS24 = 1000 / 24;
 
@@ -51,11 +53,13 @@ export class NetworkLogic {
             let data = event.data;
             if (data.origin !== this.peerJsService.peerjs.id) {
                 let id = data.id;
+                let loc3 = new Location([0,0,0]);
+                globalMove.locations.push(loc3);
                 this.r360.renderToLocation(
                     this.r360.createRoot("ParticipantHead", {
                         id: id, startVisible: true
                     }),
-                    this.r360.getDefaultLocation()
+                    loc3
                 );
             }
         });
@@ -84,8 +88,8 @@ export class NetworkLogic {
                 Object.keys(hands).forEach((handId) => {
                     let handPos = hands[handId].position;
                     let handRot = hands[handId].rotation;
-                    this.handProcessor.processHand(id, handId, hands[handId]);
-                    this.noteService.moveSelectedNote(id, handId, handPos[0], handPos[1], handPos[2], handRot);
+                    this.handProcessor.processHand(id, handId, hands[handId],true);
+                    this.noteService.moveSelectedNote(id, handId, handPos[0], handPos[1], handPos[2], handRot,true);
                 });
             }
 
@@ -100,13 +104,19 @@ export class NetworkLogic {
             controllerService.getGamepads().forEach(gamepad => {
                 if (gamepad.isVRReady()) {
                     let state = gamepad.getControllerState();
+                    state.position[0]-=controllerService.deltaX;
+                    state.position[1]-=controllerService.deltaY;
+                    state.position[2]-=controllerService.deltaZ;
                     payload.hands[gamepad.index] = state;
                 }
             });
 
             /*send data*/
             payload.id = this.peerJsService.getMyPeerJsId();
-            payload.position = this.r360._cameraPosition;
+            payload.position = [this.r360._cameraPosition[0],this.r360._cameraPosition[1],this.r360._cameraPosition[2]];
+            payload.position[0]-=controllerService.deltaX;
+            payload.position[1]-=controllerService.deltaY;
+            payload.position[2]-=controllerService.deltaZ;
             payload.rotation = rotateByQuaternion(this.r360._cameraQuat);
             this.peerJsService.broadcastData("player_state", payload);
         }, FPS24);

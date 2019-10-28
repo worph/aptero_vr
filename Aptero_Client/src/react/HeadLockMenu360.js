@@ -5,7 +5,20 @@ import {
     View,
     VrButton,
 } from 'react-360';
-import {BLACK, BLUE, CYAN, GREEN, MODE_DRAW, MODE_ERASE, MODE_NOTE, PINK, RED, WHITE, YELLOW} from "../common/Color";
+import {
+    BLACK,
+    BLUE,
+    CYAN,
+    GREEN,
+    MODE_DRAW,
+    MODE_ERASE,
+    MODE_MOVE,
+    MODE_NOTE,
+    PINK,
+    RED,
+    WHITE,
+    YELLOW
+} from "../common/Color";
 import {browserBridgeIndex} from "../module/BrowserBridgeIndex";
 
 export default class HeadLockMenu360 extends React.Component {
@@ -174,6 +187,17 @@ export default class HeadLockMenu360 extends React.Component {
                                 onClick={(event) => {
                                     this.setMode(event, MODE_NOTE)
                                 }}><Text>Note</Text></VrButton>
+                            <VrButton
+                                style={this.state.mode === MODE_MOVE ? styles.modeButtonSelected : styles.modeButton}
+                                onButtonPress={() => {
+                                    browserBridgeIndex.emit("vrButtonStart", {});
+                                }}
+                                onButtonRelease={() => {
+                                    browserBridgeIndex.emit("vrButtonStop", {});
+                                }}
+                                onClick={(event) => {
+                                    this.setMode(event, MODE_MOVE)
+                                }}><Text>Move</Text></VrButton>
                         </View>
                     </View>
                 }

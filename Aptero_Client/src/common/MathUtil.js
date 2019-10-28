@@ -4,7 +4,9 @@ let quaternion = new THREE.Quaternion(0, 0, 0, 0);
 let euler = new THREE.Euler(0, 0, 0);
 let lastRotation2 = [0, 0, 0];
 let lastRotation = [0, 0, 0];
+let lastPosition = [0, 0, 0];
 let lastRotationQuat = [0, 0, 0,0];
+let vector = new THREE.Vector3(0, 0, 0);
 
 export function rotateByQuaternion(quat: number[]): number[] {
     /*head*/
@@ -24,6 +26,19 @@ export function rotateByQuaternionRad(quat: number[]): number[] {
     lastRotation2[1] = euler.y;
     lastRotation2[2] = euler.z;
     return lastRotation2;
+}
+
+
+export function ApplyQuaternionToVect(quat: number[],vect: number[]): number[] {
+    quaternion.fromArray(quat);
+    vector.x = vect[0];
+    vector.y = vect[1];
+    vector.z = vect[2];
+    vector.applyQuaternion(quaternion);
+    lastPosition[0] = vector.x;
+    lastPosition[1] = vector.y;
+    lastPosition[2] = vector.z;
+    return lastPosition;
 }
 
 export function convertQuaternionToEuler(quat: []): number[] {

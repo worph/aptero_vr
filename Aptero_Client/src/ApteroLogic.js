@@ -1,12 +1,13 @@
 import {Paint3dDrawService} from "./service/Paint3dDrawService";
 import {PeerjsService} from "./service/PeerjsService";
 import {controllerService} from "./controller/ControllerService";
-import KeyboardCameraController from "./controller/KeyboardCameraController";
+import KeyboardCameraController, {cameraControl} from "./controller/KeyboardCameraController";
 import {NoteService} from "./service/NoteService";
 import {NetworkLogic} from "./NetworkLogic";
 import {LocalLogic} from "./LocalLogic";
-import {Location} from "react-360-web";
+import {Location, Surface} from "react-360-web";
 import {convertEulerToQuaternion} from "./common/MathUtil";
+import {globalMove} from "./service/GlobalMove";
 
 export class ApteroLogic {
     r360;
@@ -26,9 +27,11 @@ export class ApteroLogic {
     }
 
     setup() {
+        let loc1 = new Location([0,0,0]);
+        globalMove.locations.push(loc1);
         this.r360.renderToLocation(
             this.r360.createRoot("Points", {}),
-            this.r360.getDefaultLocation()
+            loc1
         );
         this.paint3d = new Paint3dDrawService();
         this.noteService = new NoteService(this.r360);
@@ -43,9 +46,15 @@ export class ApteroLogic {
         * Create room environement and menu
          */
 
-        this.r360.renderToSurface(this.r360.createRoot('HeadLockMenu360'), this.r360.getDefaultSurface());
+        const myCylinderSurface = new Surface(
+            1000, /* width */
+            600, /* height */
+            Surface.SurfaceShape.Cylinder /* shape */
+        );
+        this.r360.renderToSurface(this.r360.createRoot('HeadLockMenu360'), myCylinderSurface);
 
         let loc = new Location([3,1,0]);
+        globalMove.locations.push(loc);
         this.r360.renderToLocation(
             this.r360.createRoot('WhiteBoard'),
             loc
@@ -53,27 +62,43 @@ export class ApteroLogic {
         let quat = convertEulerToQuaternion([0,90,0]);
         loc.setWorldRotation(quat[0],quat[1],quat[2],quat[3]);
 
+        let loc2 = new Location([0,0,0]);
+        globalMove.locations.push(loc2);
         this.r360.renderToLocation(
             this.r360.createRoot('Room'),
-            this.r360.getDefaultLocation(),
+            loc2,
         );
 
+        let loc3 = new Location([0,0,0]);
+        globalMove.locations.push(loc3);
         this.r360.renderToLocation(
             this.r360.createRoot('Env'),
-            this.r360.getDefaultLocation(),
+            loc3,
         );
-        this.r360.compositor.setBackground(this.r360.getAssetURL('360WorldSun.jpg'));
 
         /*
         * Setup controlls
          */
-        this.r360.controls.addCameraController(new KeyboardCameraController());
+        let controllerBefore = this.r360.controls.cameraControllers;
+        let newController = [new KeyboardCameraController()];
+        newController.push(...controllerBefore);
+        this.r360.controls.cameraControllers = newController;
         controllerService.createMouseController(this.r360);
+
+        cameraControl.on("move_scene",(data:{move:number[]})=>{
+            globalMove.applyDelta(data.move[0],data.move[1],data.move[2]);
+            this.noteService.applyDelta(data.move[0],data.move[1],data.move[2]);
+            controllerService.setAbsoluteDelta(globalMove.deltaX,globalMove.deltaY,globalMove.deltaZ);
+            /*this.r360._cameraPosition[0]-=data.move[0];
+            this.r360._cameraPosition[1]-=data.move[1];
+            this.r360._cameraPosition[2]-=data.move[2];*/
+        });
 
         /*
         Init state
          */
 
+        this.r360.compositor.setBackground(this.r360.getAssetURL('360WorldSun.jpg'));
         this.noteService.createNoteAt(0, 0, 0, 0, 0, 0, false);
     }
 

@@ -9,6 +9,15 @@ export class ControllerService {
     mouseController: Controller;
     vrButtonInProgress = false;
 
+    deltaX = 0;
+    deltaY = 0;
+    deltaZ = 0;
+    setAbsoluteDelta(x,y,z){
+        this.deltaX = x;
+        this.deltaY = y;
+        this.deltaZ = z;
+    }
+
     createMouseController(r360) {
         this.mouseController = new MouseController(999, r360);
     }
