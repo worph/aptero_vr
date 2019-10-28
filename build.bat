@@ -1,6 +1,6 @@
 cd Aptero_Client
-call yarn install
-call yarn run bundle
+call npm install
+call npm run bundle
 cd ..
 cd Aptero_Server
 call npm install

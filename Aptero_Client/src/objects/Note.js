@@ -45,6 +45,12 @@ export default class Note extends React.Component<{ id: string, position: { x: n
                         } else {
                             this.setState({editing: true});
                             browserBridgeIndex.emit("startEditText", {id: this.props.id});
+                            setTimeout(()=>{
+                                if(this.state.editing) {
+                                    this.setState({editing: false});
+                                    browserBridgeIndex.emit("stopEditText", {id: this.props.id});
+                                }
+                            },14000);//14s max input
                         }
                     }}><Text style={styles.buttonTextNote}>
                         Note: {this.props.id+"\n"}
@@ -81,4 +87,3 @@ const styles = StyleSheet.create({
         color: '#000000'
     },
 });
-

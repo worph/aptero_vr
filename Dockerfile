@@ -1,4 +1,4 @@
-FROM risingstack/alpine:3.7-v8.10.0-4.8.0
+FROM node:10.17.0-jessie
 
 ENV PORT 6767
 EXPOSE 6767
