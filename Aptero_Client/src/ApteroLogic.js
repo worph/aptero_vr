@@ -5,6 +5,8 @@ import KeyboardCameraController from "./controller/KeyboardCameraController";
 import {NoteService} from "./service/NoteService";
 import {NetworkLogic} from "./NetworkLogic";
 import {LocalLogic} from "./LocalLogic";
+import {Location} from "react-360-web";
+import {convertEulerToQuaternion} from "./common/MathUtil";
 
 export class ApteroLogic {
     r360;
@@ -42,6 +44,14 @@ export class ApteroLogic {
          */
 
         this.r360.renderToSurface(this.r360.createRoot('HeadLockMenu360'), this.r360.getDefaultSurface());
+
+        let loc = new Location([3,1,0]);
+        this.r360.renderToLocation(
+            this.r360.createRoot('WhiteBoard'),
+            loc
+        );
+        let quat = convertEulerToQuaternion([0,90,0]);
+        loc.setWorldRotation(quat[0],quat[1],quat[2],quat[3]);
 
         this.r360.renderToLocation(
             this.r360.createRoot('Room'),

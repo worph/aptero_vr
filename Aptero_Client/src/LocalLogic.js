@@ -32,6 +32,7 @@ export class LocalLogic {
         /**
          //hand mapping
          **/
+        let time = new Date().getTime();
         let controllerServiceLoc = controllerService;
         controllerServiceLoc.getGamepads().forEach(gamepad => {
             let gstate = gamepad.getControllerState();
@@ -41,7 +42,10 @@ export class LocalLogic {
                 let rot = gamepad.getRotation();
                 this.handProcessor.processHand(this.ownerId, handId, gstate);
                 this.noteService.moveSelectedNote(this.ownerId , gamepad.index, pos[0], pos[1], pos[2], rot);
-                if (gstate.activated && gamepad.isPressed()) {
+                if (gstate.activated &&
+                    gamepad.isPressed() &&
+                    !controllerServiceLoc.getVrButtonInProgress() &&
+                    (time-gamepad.getLastPressedTime())>50) {
                     this.actionAt(this.ownerId, gamepad, pos[0], pos[1], pos[2], rot[0], rot[1], rot[2]);
                 }
             }
@@ -55,7 +59,7 @@ export class LocalLogic {
                 origin: owner
             });
         } else if (this.menuService.getMode() === MODE_NOTE && !gamepad.isInputProcessed()) {
-            this.noteService.selectOrCreateNoteAt(owner, gamepad.index, x, y, z, rx, ry, rz, 0.4);
+            this.noteService.selectOrCreateNoteAt(owner, gamepad.index, x, y, z, rx, ry, rz, 0.2);
         } else {
             this.paint3d.removePointNear(x, y, z, POINT_RADIUS * 4);
         }

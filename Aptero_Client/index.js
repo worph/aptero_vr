@@ -10,6 +10,7 @@ import Points from "./src/objects/Points";
 import {browserBridgeIndex, registerCallableModule} from "./src/module/BrowserBridgeIndex";
 import HeadLockMenu360 from "./src/react/HeadLockMenu360";
 import Note from "./src/objects/Note";
+import WhiteBoard from "./src/objects/WhiteBoard";
 
 AppRegistry.registerComponent('Room', () => Room);
 AppRegistry.registerComponent('ParticipantHead', () => ParticipantHead);
@@ -19,6 +20,8 @@ AppRegistry.registerComponent('Points', () => Points);
 AppRegistry.registerComponent('HeadLockMenu360', () => HeadLockMenu360);
 AppRegistry.registerComponent('Env', () => Env);
 AppRegistry.registerComponent('Note', ()=> Note);
+AppRegistry.registerComponent('WhiteBoard', ()=> WhiteBoard);
+
 
 registerCallableModule();
 

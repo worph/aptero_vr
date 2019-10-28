@@ -135,10 +135,20 @@ export class NoteService {
         }
         let deselected = this.deselectOwnedNote(owner, hand);
         if (!deselected) {
-            if (this.selectNearestNote(owner, hand, x, y, z, radius) === -1) {
+            if (this.selectNearestNoteMultiRadius(owner, hand, x, y, z, radius) === "-1") {
                 this.createNoteAt(owner, hand, x, y, z, rx, ry, rz, false);
             }
         }
+    }
+
+    selectNearestNoteMultiRadius(owner: string, hand: number, x: number, y: number, z: number, givenRadius: number): string {
+        for(let radius = 0.01;radius<=givenRadius;radius*=2) {
+            let res: Note3dData = this.octree.find(x, y, z, radius);
+            if(res){
+                return this.selectNote(owner,hand,res.id);
+            }
+        }
+        return "-1"
     }
 
     selectNearestNote(owner: string, hand: number, x: number, y: number, z: number, radius: number): string {
@@ -146,7 +156,7 @@ export class NoteService {
         if (res) {
             this.selectNote(owner,hand,res.id);
         } else {
-            return -1;
+            return "-1";
         }
     }
 

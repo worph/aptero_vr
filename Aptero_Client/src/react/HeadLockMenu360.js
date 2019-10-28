@@ -48,41 +48,90 @@ export default class HeadLockMenu360 extends React.Component {
                         {this.state.mode === MODE_DRAW &&
                         <View style={styles.colorsBox}>
                             <VrButton style={this.state.color === RED ? styles.redSelected : styles.red}
+                                      onButtonPress={() => {
+                                          browserBridgeIndex.emit("vrButtonStart", {});
+                                      }}
+                                      onButtonRelease={() => {
+                                          browserBridgeIndex.emit("vrButtonStop", {});
+                                      }}
                                       onClick={(event) => {
                                           this.setColor(event, RED)
                                       }}>
                             </VrButton>
                             <VrButton style={this.state.color === GREEN ? styles.greenSelected : styles.green}
+                                      onButtonPress={() => {
+                                          browserBridgeIndex.emit("vrButtonStart", {});
+                                      }}
+                                      onButtonRelease={() => {
+                                          browserBridgeIndex.emit("vrButtonStop", {});
+                                      }}
                                       onClick={(event) => {
                                           this.setColor(event, GREEN)
                                       }}>
                             </VrButton>
                             <VrButton style={this.state.color === BLUE ? styles.blueSelected : styles.blue}
+                                      onButtonPress={() => {
+                                          browserBridgeIndex.emit("vrButtonStart", {});
+                                      }}
+                                      onButtonRelease={() => {
+                                          browserBridgeIndex.emit("vrButtonStop", {});
+                                      }}
                                       onClick={(event) => {
                                           this.setColor(event, BLUE)
                                       }}>
                             </VrButton>
                             <VrButton style={this.state.color === PINK ? styles.pinkSelected : styles.pink}
+                                      onButtonPress={() => {
+                                          browserBridgeIndex.emit("vrButtonStart", {});
+                                      }}
+                                      onButtonRelease={() => {
+                                          browserBridgeIndex.emit("vrButtonStop", {});
+                                      }}
                                       onClick={(event) => {
                                           this.setColor(event, PINK)
                                       }}>
                             </VrButton>
                             <VrButton style={this.state.color === YELLOW ? styles.yellowSelected : styles.yellow}
+
+                                      onButtonPress={() => {
+                                          browserBridgeIndex.emit("vrButtonStart", {});
+                                      }}
+                                      onButtonRelease={() => {
+                                          browserBridgeIndex.emit("vrButtonStop", {});
+                                      }}
                                       onClick={(event) => {
                                           this.setColor(event, YELLOW)
                                       }}>
                             </VrButton>
                             <VrButton style={this.state.color === CYAN ? styles.cyanSelected : styles.cyan}
+                                      onButtonPress={() => {
+                                          browserBridgeIndex.emit("vrButtonStart", {});
+                                      }}
+                                      onButtonRelease={() => {
+                                          browserBridgeIndex.emit("vrButtonStop", {});
+                                      }}
                                       onClick={(event) => {
                                           this.setColor(event, CYAN)
                                       }}>
                             </VrButton>
                             <VrButton style={this.state.color === BLACK ? styles.blackSelected : styles.black}
+                                      onButtonPress={() => {
+                                          browserBridgeIndex.emit("vrButtonStart", {});
+                                      }}
+                                      onButtonRelease={() => {
+                                          browserBridgeIndex.emit("vrButtonStop", {});
+                                      }}
                                       onClick={(event) => {
                                           this.setColor(event, BLACK)
                                       }}>
                             </VrButton>
                             <VrButton style={this.state.color === WHITE ? styles.whiteSelected : styles.white}
+                                      onButtonPress={() => {
+                                          browserBridgeIndex.emit("vrButtonStart", {});
+                                      }}
+                                      onButtonRelease={() => {
+                                          browserBridgeIndex.emit("vrButtonStop", {});
+                                      }}
                                       onClick={(event) => {
                                           this.setColor(event, WHITE)
                                       }}>
@@ -93,16 +142,35 @@ export default class HeadLockMenu360 extends React.Component {
                         <View style={styles.colorsModeBox}>
                             <VrButton
                                 style={this.state.mode === MODE_DRAW ? styles.modeButtonSelected : styles.modeButton}
+
+                                onButtonPress={() => {
+                                    browserBridgeIndex.emit("vrButtonStart", {});
+                                }}
+                                onButtonRelease={() => {
+                                    browserBridgeIndex.emit("vrButtonStop", {});
+                                }}
                                 onClick={(event) => {
                                     this.setMode(event, MODE_DRAW)
                                 }}><Text>Draw</Text></VrButton>
                             <VrButton
                                 style={this.state.mode === MODE_ERASE ? styles.modeButtonSelected : styles.modeButton}
+                                onButtonPress={() => {
+                                    browserBridgeIndex.emit("vrButtonStart", {});
+                                }}
+                                onButtonRelease={() => {
+                                    browserBridgeIndex.emit("vrButtonStop", {});
+                                }}
                                 onClick={(event) => {
                                     this.setMode(event, MODE_ERASE)
                                 }}><Text>Erase</Text></VrButton>
                             <VrButton
                                 style={this.state.mode === MODE_NOTE ? styles.modeButtonSelected : styles.modeButton}
+                                onButtonPress={() => {
+                                    browserBridgeIndex.emit("vrButtonStart", {});
+                                }}
+                                onButtonRelease={() => {
+                                    browserBridgeIndex.emit("vrButtonStop", {});
+                                }}
                                 onClick={(event) => {
                                     this.setMode(event, MODE_NOTE)
                                 }}><Text>Note</Text></VrButton>

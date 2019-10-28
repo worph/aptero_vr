@@ -5,7 +5,8 @@ import Recorder from './Recorder';
 export class SpeechToTextServiceAptero {
     host:string;
     constructor(){
-        this.host = window.location.href.startsWith("https://") ? "https://meeting.aptero.co/stt" : "http://127.0.0.1:6768";//TODO add parameters
+        //this.host = window.location.href.startsWith("https://") ? "https://meeting.aptero.co/stt" : "http://127.0.0.1:6768";//TODO add parameters
+        this.host = "https://meeting.aptero.co/stt";//TODO add parameters
     }
 
 
@@ -33,7 +34,6 @@ export class SpeechToTextServiceAptero {
 
     async translateLastRecordToText(blob): Promise<string> {
         let base64Audio = await this.blobToBase64(blob);
-        console.log(base64Audio);
         let resp = await axios.post(this.host+"/stt", {audio:base64Audio}, {});
         return resp.data.text;
     }

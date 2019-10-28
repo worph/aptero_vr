@@ -16,18 +16,19 @@ export class MouseController implements Controller {
         position: [],
         rotation: [],
         pressed: false,
-        activated: true,
+        activated: false,
     };
     keyPressed = false;
 
-    lastButtonState = false;
+    lastProcessedButtonState = false;
+    lastPressedState = false;
 
     isInputProcessed(): boolean {
-        return this.lastButtonState !== this.isPressed();
+        return this.lastProcessedButtonState !== this.isPressedInternal();
     }
 
     setInputProcessed(): void {
-        this.lastButtonState = this.isPressed();
+        this.lastProcessedButtonState = this.isPressedInternal();
     }
 
     getIndex() {
@@ -42,6 +43,9 @@ export class MouseController implements Controller {
         this.r360 = r360;
         this.index = index;
         window.document.addEventListener('keydown', (event) => {
+            if (event.defaultPrevented) {
+                return;
+            }
             if (event.keyCode === 32) {
                 this.keyPressed = true;
             }
@@ -56,8 +60,23 @@ export class MouseController implements Controller {
         });
     }
 
-    isPressed() {
+    isPressedInternal() {
         return this.keyPressed;
+    }
+
+    lastPressedTime =0;
+
+    getLastPressedTime(){
+        return this.lastPressedTime;
+    }
+
+    isPressed() {
+        let lastState = this.lastPressedState;
+        this.lastPressedState = this.isPressedInternal();
+        if(lastState!==this.lastPressedState){
+            this.lastPressedTime = new Date().getTime();
+        }
+        return lastState;
     }
 
     getHand(): string {

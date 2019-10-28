@@ -1,17 +1,32 @@
 import {MouseController} from "./MouseController";
 import {GamepadController} from "./GamepadController";
 import type {Controller} from "./ControllerInterface";
+import {browserBridgeClient} from "../module/BrowserBridgeClient";
 
 export class ControllerService {
 
     controllers: { [id: number]: Controller } = {};
     mouseController: Controller;
+    vrButtonInProgress = false;
 
     createMouseController(r360) {
         this.mouseController = new MouseController(999, r360);
     }
 
+    getVrButtonInProgress() {
+        return this.vrButtonInProgress;
+    }
+
     constructor(r360) {
+
+        browserBridgeClient.onEvent("vrButtonStart",()=>{
+            this.vrButtonInProgress = true;
+            console.log("vrButtonStart");
+        });
+        browserBridgeClient.onEvent("vrButtonStop",()=>{
+            this.vrButtonInProgress = false;
+            console.log("vrButtonStop");
+        });
 
         window.addEventListener('gamepadconnected', (e) => {
             let gamepad = e.gamepad;

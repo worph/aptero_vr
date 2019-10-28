@@ -38,7 +38,17 @@ export default class Note extends React.Component<{ id: string, position: { x: n
                     justifyContent: 'center',
                     alignItems: 'center',
                 }}>
-                    <VrButton style={styles.buttonNote} onClick={(event) => {
+                    <VrButton style={styles.buttonNote}
+                              onButtonPress={()=>{
+                                  browserBridgeIndex.emit("vrButtonStart", {});
+                              }}
+                              onButtonRelease={()=>{
+                                  browserBridgeIndex.emit("vrButtonStop", {});
+                              }}
+                              onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        console.log(event);
                         if (this.state.editing) {
                             this.setState({editing: false});
                             browserBridgeIndex.emit("stopEditText", {id: this.props.id});
@@ -53,7 +63,7 @@ export default class Note extends React.Component<{ id: string, position: { x: n
                             },14000);//14s max input
                         }
                     }}><Text style={styles.buttonTextNote}>
-                        Note: {this.props.id+"\n"}
+                        {/*"Note: "+this.props.id+"\n"*/}
                         {!this.state.editing ? this.state.text : "Speak and click again on the note when finished."}
                     </Text></VrButton>
                 </View>
