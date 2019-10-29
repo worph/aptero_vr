@@ -20,8 +20,8 @@ export default class RoomB extends React.Component<{}, {}> {
                 {this.state.active && <View>
                     <Entity
                         source={{
-                            obj: asset('room2.obj'),
-                            mtl: asset('room2.mtl')
+                            obj: asset('roomV2.obj'),
+                            mtl: asset('roomV2.mtl')
                         }}
                         lit={true}
                         shadow={{
@@ -29,9 +29,9 @@ export default class RoomB extends React.Component<{}, {}> {
                         }}
                         style={{
                             transform: [
-                                {translate: [0, -2, -2]},
+                                {translate: [0, -2, 5]},
                                 {rotateY: 0},
-                                {scale: 0.01}
+                                {scale: 0.7}
                             ]
                         }}
                     />

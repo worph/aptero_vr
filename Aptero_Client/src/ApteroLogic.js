@@ -53,14 +53,15 @@ export class ApteroLogic {
         );
         this.r360.renderToSurface(this.r360.createRoot('HeadLockMenu360'), myCylinderSurface);
 
-        let loc = new Location([3,1,0]);
+        let loc = new Location([0,0,0]);
         globalMove.locations.push(loc);
         this.r360.renderToLocation(
             this.r360.createRoot('WhiteBoard'),
             loc
         );
-        let quat = convertEulerToQuaternion([0,90,0]);
+        let quat = convertEulerToQuaternion([0,0,0]);
         loc.setWorldRotation(quat[0],quat[1],quat[2],quat[3]);
+        loc.setWorldPosition(-2,1,3)
 
         let locA = new Location([0,0,0]);
         globalMove.locations.push(locA);
