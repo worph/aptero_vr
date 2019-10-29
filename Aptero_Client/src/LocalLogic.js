@@ -1,4 +1,4 @@
-import {MODE_DRAW, MODE_MOVE, MODE_NOTE, POINT_RADIUS} from "./common/Color";
+import {MODE_DRAW, MODE_MOVE, MODE_NOTE, MODE_NOTE_CREATE, MODE_NOTE_EDIT, POINT_RADIUS} from "./common/Color";
 import {Paint3dDrawService} from "./service/Paint3dDrawService";
 import {controllerService} from "./controller/ControllerService";
 import {NoteService} from "./service/NoteService";
@@ -34,7 +34,7 @@ export class LocalLogic {
         /**
          //hand mapping
          **/
-        let time = new Date().getTime();
+        //let time = new Date().getTime();
         let controllerServiceLoc = controllerService;
         controllerServiceLoc.getGamepads().forEach(gamepad => {
             let gstate = gamepad.getControllerState();
@@ -54,8 +54,9 @@ export class LocalLogic {
                 this.noteService.moveSelectedNote(this.ownerId, gamepad.index, pos[0], pos[1], pos[2], rot, true);
                 if (gstate.activated &&
                     gamepad.isPressed() &&
-                    !controllerServiceLoc.getVrButtonInProgress() &&
-                    (time - gamepad.getLastPressedTime()) > 25) {
+                    !controllerServiceLoc.getVrButtonInProgress()
+                    //&& (time - gamepad.getLastPressedTime()) > 25
+                ) {
                     this.actionAt(this.ownerId, gamepad, pos[0], pos[1], pos[2], rot[0], rot[1], rot[2]);
                 }
             }
@@ -68,8 +69,10 @@ export class LocalLogic {
                 color: this.menuService.getColor(),
                 origin: owner
             });
-        } else if (this.menuService.getMode() === MODE_NOTE && !gamepad.isInputProcessed()) {
-            this.noteService.selectOrCreateNoteAt(owner, gamepad.index, x, y, z, rx, ry, rz, 0.2);
+        } else if (this.menuService.getMode() === MODE_NOTE_CREATE && gamepad.isNewInput()) {
+            this.noteService.selectOrCreateNoteAt(owner, gamepad.index, x, y, z, rx, ry, rz, 0.6);
+        } else if (this.menuService.getMode() === MODE_NOTE_EDIT && gamepad.isNewInput()) {
+            this.noteService.startOrStopEdit(owner, gamepad.index, x, y, z, 0.5)
         } else if (this.menuService.getMode() === MODE_MOVE) {
             //this.noteService.deselectOwnedNote(owner, gamepad.index);
             let vect = ApplyQuaternionToVect(this.r360.getCameraQuaternion(), [0, 0, 0.1]);
@@ -77,7 +80,7 @@ export class LocalLogic {
         } else {
             this.paint3d.removePointNear(x, y, z, POINT_RADIUS * 4);
         }
-        gamepad.setInputProcessed();
+        gamepad.setNewInputFalse();
     }
 
 }

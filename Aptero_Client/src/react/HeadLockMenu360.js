@@ -13,7 +13,7 @@ import {
     MODE_DRAW,
     MODE_ERASE,
     MODE_MOVE,
-    MODE_NOTE,
+    MODE_NOTE, MODE_NOTE_CREATE, MODE_NOTE_EDIT,
     PINK,
     RED,
     WHITE,
@@ -177,7 +177,7 @@ export default class HeadLockMenu360 extends React.Component {
                                     this.setMode(event, MODE_ERASE)
                                 }}><Text>Erase</Text></VrButton>
                             <VrButton
-                                style={this.state.mode === MODE_NOTE ? styles.modeButtonSelected : styles.modeButton}
+                                style={this.state.mode === MODE_NOTE_CREATE ? styles.modeButtonSelected : styles.modeButton}
                                 onButtonPress={() => {
                                     browserBridgeIndex.emit("vrButtonStart", {});
                                 }}
@@ -185,8 +185,19 @@ export default class HeadLockMenu360 extends React.Component {
                                     browserBridgeIndex.emit("vrButtonStop", {});
                                 }}
                                 onClick={(event) => {
-                                    this.setMode(event, MODE_NOTE)
-                                }}><Text>Note</Text></VrButton>
+                                    this.setMode(event, MODE_NOTE_CREATE)
+                                }}><Text>Create Note</Text></VrButton>
+                            <VrButton
+                                style={this.state.mode === MODE_NOTE_EDIT ? styles.modeButtonSelected : styles.modeButton}
+                                onButtonPress={() => {
+                                    browserBridgeIndex.emit("vrButtonStart", {});
+                                }}
+                                onButtonRelease={() => {
+                                    browserBridgeIndex.emit("vrButtonStop", {});
+                                }}
+                                onClick={(event) => {
+                                    this.setMode(event, MODE_NOTE_EDIT)
+                                }}><Text>Edit Note</Text></VrButton>
                             <VrButton
                                 style={this.state.mode === MODE_MOVE ? styles.modeButtonSelected : styles.modeButton}
                                 onButtonPress={() => {
@@ -239,7 +250,7 @@ const styles = StyleSheet.create({
     modeButton: {
         marginLeft: 20,
         marginRight: 20,
-        width: 200,
+        width: 150,
         height: 50,
         backgroundColor: '#000000',
         borderColor: '#639dda',
@@ -250,7 +261,7 @@ const styles = StyleSheet.create({
     modeButtonSelected: {
         marginLeft: 20,
         marginRight: 20,
-        width: 200,
+        width: 150,
         height: 50,
         backgroundColor: '#000000',
         borderColor: '#dacc00',

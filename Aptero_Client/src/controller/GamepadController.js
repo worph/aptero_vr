@@ -18,15 +18,14 @@ export class GamepadController implements Controller {
         activated: true,
     };
 
-    lastProcessedState = false;
     lastPressedState = false;
 
-    isInputProcessed(): boolean {
-        return this.lastProcessedState !== this.isPressedInternal();
+    newInput = false;
+    isNewInput(): boolean {
+        return this.newInput;
     }
-
-    setInputProcessed(): void {
-        this.lastProcessedState = this.isPressedInternal();
+    setNewInputFalse(): void {
+        this.newInput = false;
     }
 
     getIndex() {
@@ -62,9 +61,10 @@ export class GamepadController implements Controller {
         let lastState = this.lastPressedState;
         this.lastPressedState = this.isPressedInternal();
         if(lastState!==this.lastPressedState){
+            this.newInput = true;
             this.lastPressedTime = new Date().getTime();
         }
-        return lastState;
+        return this.lastPressedState;
     }
 
     getHand(): string {

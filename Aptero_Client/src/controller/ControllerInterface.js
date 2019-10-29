@@ -22,9 +22,9 @@ export interface Controller {
 
     getIndex(): number;
 
-    isInputProcessed(): boolean;
+    isNewInput(): boolean;
 
-    setInputProcessed(): boolean;
+    setNewInputFalse(): void;
 
     getHand(): string;
 

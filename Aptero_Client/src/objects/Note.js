@@ -12,7 +12,7 @@ export default class Note extends React.Component<{ id: string, position: { x: n
     state = {
         position: {},
         editing: false,
-        text: "Click to edit text",
+        text: "Change to Note Edit button to change text",
     };
     id: string = this.props.id;
 
@@ -39,32 +39,33 @@ export default class Note extends React.Component<{ id: string, position: { x: n
                     alignItems: 'center',
                 }}>
                     <VrButton style={styles.buttonNote}
-                              onButtonPress={()=>{
+                              onButtonPress={() => {
                                   browserBridgeIndex.emit("vrButtonStart", {});
                               }}
-                              onButtonRelease={()=>{
+                              onButtonRelease={() => {
                                   browserBridgeIndex.emit("vrButtonStop", {});
                               }}
                               onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        console.log(event);
-                        if (this.state.editing) {
-                            this.setState({editing: false});
-                            browserBridgeIndex.emit("stopEditText", {id: this.props.id});
-                        } else {
-                            this.setState({editing: true});
-                            browserBridgeIndex.emit("startEditText", {id: this.props.id});
-                            setTimeout(()=>{
-                                if(this.state.editing) {
-                                    this.setState({editing: false});
-                                    browserBridgeIndex.emit("stopEditText", {id: this.props.id});
-                                }
-                            },14000);//14s max input
-                        }
-                    }}><Text style={styles.buttonTextNote}>
+                                  event.preventDefault();
+                                  event.stopPropagation();
+                                  console.log(event);
+                                  if (this.state.editing) {
+                                      this.setState({editing: false});
+                                      browserBridgeIndex.emit("stopEditText", {id: this.props.id});
+                                  } else {
+                                      this.setState({editing: true});
+                                      browserBridgeIndex.emit("startEditText", {id: this.props.id});
+                                      setTimeout(() => {
+                                          if (this.state.editing) {
+                                              this.setState({editing: false});
+                                              browserBridgeIndex.emit("stopEditText", {id: this.props.id});
+                                          }
+                                      }, 14000);//14s max input
+                                  }
+                              }}><Text style={styles.buttonTextNote}>
                         {/*"Note: "+this.props.id+"\n"*/}
-                        {!this.state.editing ? this.state.text : "Speak and click again on the note when finished."}
+                        {/*!this.state.editing ? this.state.text : "Speak and click again on the note when finished."*/}
+                        {this.state.text}
                     </Text></VrButton>
                 </View>
             </View>

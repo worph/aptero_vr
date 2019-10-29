@@ -52,6 +52,7 @@ export class NoteService {
         this.deltaZ+=z;
     }
 
+    recording = "false";
 
     constructor(r360) {
         this.r360 = r360;
@@ -66,19 +67,45 @@ export class NoteService {
             return d.z
         });
         browserBridgeClient.onEvent("startEditText", data => {
-            let id = data.id;
-            this.speechToTextService.startRecording();
+            //this.startEdit();
         });
         browserBridgeClient.onEvent("stopEditText", data => {
-            let id = data.id;
-            this.changeText(this.owner, id, "processing...");
-            this.speechToTextService.stopRecordingAndGetText().then(text => {
-                this.changeText(this.owner, id, text);
-            }).catch(error => {
-                this.changeText(this.owner, id, "server error please try again");
-            });
+            this.stopEdit();
         });
         this.speechToTextService.start();
+    }
+
+    startEdit(id){
+        this.recording = "true";
+        this.changeText(this.owner, id, "Speak and click again on the note when finished.");
+        this.speechToTextService.startRecording();
+    }
+
+    startOrStopEdit(owner: string, hand: number, x: number, y: number, z: number, givenRadius: number){
+        let id = this.getNearestNoteMultiRadius(owner,hand,x,y,z,givenRadius);
+        if(this.recording==="true"){
+            this.stopEdit(id);
+        }else if(this.recording==="false"){
+            this.startEdit(id);
+            setTimeout(() => {
+                if (this.recording==="true") {
+                    this.stopEdit(id);
+                }
+            }, 14000);//14s max input
+        }
+    }
+
+    stopEdit(id){
+        this.recording="processing";
+        this.changeText(this.owner, id, "processing...");
+        this.speechToTextService.stopRecordingAndGetText().then(text => {
+            this.recording="false";
+            this.changeText(this.owner, id, text);
+        }).catch(error => {
+            console.error(error);
+            this.recording="false";
+            this.changeText(this.owner, id, "server error please try again");
+        });
     }
 
     onAdded(callback: (data: NoteDTOData)=>void): ()=>void {
@@ -158,8 +185,18 @@ export class NoteService {
         }
     }
 
+    getNearestNoteMultiRadius(owner: string, hand: number, x: number, y: number, z: number, givenRadius: number): string {
+        for(let radius = 0.02;radius<=givenRadius;radius*=2) {
+            let res: Note3dData = this.octree.find(x, y, z, radius);
+            if(res){
+                return res.id;
+            }
+        }
+        return "-1"
+    }
+
     selectNearestNoteMultiRadius(owner: string, hand: number, x: number, y: number, z: number, givenRadius: number): string {
-        for(let radius = 0.01;radius<=givenRadius;radius*=2) {
+        for(let radius = 0.02;radius<=givenRadius;radius*=2) {
             let res: Note3dData = this.octree.find(x, y, z, radius);
             if(res){
                 return this.selectNote(owner,hand,res.id);

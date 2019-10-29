@@ -59,8 +59,10 @@ export class Wav2Recorder{
     }
 
     async stopRecording() {
-        this.recorder.stop();
-        this.blob = this.recorder.getWAVBlob();
+        if(this.recorder) {
+            this.recorder.stop();
+            this.blob = this.recorder.getWAVBlob();
+        }
         return "ok";
     }
 

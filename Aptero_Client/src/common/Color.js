@@ -14,3 +14,5 @@ export const MODE_DRAW = "draw";
 export const MODE_ERASE = "erase";
 export const MODE_NOTE = "note";
 export const MODE_MOVE = "MOVE";
+export const MODE_NOTE_CREATE = "create";
+export const MODE_NOTE_EDIT = "edit";

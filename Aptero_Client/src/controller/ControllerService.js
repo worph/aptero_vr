@@ -29,12 +29,10 @@ export class ControllerService {
     constructor(r360) {
 
         browserBridgeClient.onEvent("vrButtonStart",()=>{
-            this.vrButtonInProgress = true;
-            console.log("vrButtonStart");
+            //this.vrButtonInProgress = true;
         });
         browserBridgeClient.onEvent("vrButtonStop",()=>{
-            this.vrButtonInProgress = false;
-            console.log("vrButtonStop");
+            //this.vrButtonInProgress = false;
         });
 
         window.addEventListener('gamepadconnected', (e) => {

@@ -20,15 +20,14 @@ export class MouseController implements Controller {
     };
     keyPressed = false;
 
-    lastProcessedButtonState = false;
     lastPressedState = false;
 
-    isInputProcessed(): boolean {
-        return this.lastProcessedButtonState !== this.isPressedInternal();
+    newInput = false;
+    isNewInput(): boolean {
+        return this.newInput;
     }
-
-    setInputProcessed(): void {
-        this.lastProcessedButtonState = this.isPressedInternal();
+    setNewInputFalse(): void {
+        this.newInput = false;
     }
 
     getIndex() {
@@ -74,9 +73,10 @@ export class MouseController implements Controller {
         let lastState = this.lastPressedState;
         this.lastPressedState = this.isPressedInternal();
         if(lastState!==this.lastPressedState){
+            this.newInput=true;
             this.lastPressedTime = new Date().getTime();
         }
-        return lastState;
+        return this.lastPressedState;
     }
 
     getHand(): string {
