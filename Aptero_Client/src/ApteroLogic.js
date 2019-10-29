@@ -62,11 +62,18 @@ export class ApteroLogic {
         let quat = convertEulerToQuaternion([0,90,0]);
         loc.setWorldRotation(quat[0],quat[1],quat[2],quat[3]);
 
-        let loc2 = new Location([0,0,0]);
-        globalMove.locations.push(loc2);
+        let locA = new Location([0,0,0]);
+        globalMove.locations.push(locA);
         this.r360.renderToLocation(
-            this.r360.createRoot('Room'),
-            loc2,
+            this.r360.createRoot('RoomA'),
+            locA,
+        );
+
+        let locB = new Location([0,0,0]);
+        globalMove.locations.push(locB);
+        this.r360.renderToLocation(
+            this.r360.createRoot('RoomB'),
+            locB,
         );
 
         let loc3 = new Location([0,0,0]);

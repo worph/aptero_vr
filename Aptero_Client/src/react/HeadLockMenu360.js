@@ -13,20 +13,23 @@ import {
     MODE_DRAW,
     MODE_ERASE,
     MODE_MOVE,
-    MODE_NOTE, MODE_NOTE_CREATE, MODE_NOTE_EDIT,
+    MODE_NOTE, MODE_NOTE_CREATE, MODE_NOTE_EDIT, MODE_SCENE,
     PINK,
     RED,
     WHITE,
     YELLOW
 } from "../common/Color";
 import {browserBridgeIndex} from "../module/BrowserBridgeIndex";
+import {sceneManager} from "../service/SceneManager";
 
 export default class HeadLockMenu360 extends React.Component {
 
     state = {
         open: true,
         color: RED,
-        mode: MODE_DRAW
+        mode: MODE_DRAW,
+        subtext: "Welcome to Aptero Virtual Meeting Room.\n" +
+            "Share the url of this page to allow someone to connect. \n Please use Oculus Quest or Firefox with Oculus Rift for a full VR experience.",
     };
 
     setColor(event, color: string) {
@@ -50,13 +53,29 @@ export default class HeadLockMenu360 extends React.Component {
                 {
                     this.state.open &&
                     <View style={styles.panel}>
+
                         <View style={styles.greetingBox}>
                             <Text style={styles.greeting}>
-                                Welcome to Aptero Virtual Meeting Room.
-                                Share the url of this page to allow someone to connect.
-                                Please use Oculus Quest or Firefox with Oculus Rift for a full VR experience.
+                                {this.state.subtext}
                             </Text>
                         </View>
+
+                        {this.state.mode === MODE_SCENE &&
+                        <View style={styles.colorsBox}>
+                            <VrButton style={styles.modeButton} onClick={(event) => {
+                                sceneManager.eventEmitter.emit("change", {room: "A"});
+                            }}>
+                                <Text>A</Text>
+                            </VrButton>
+                            <VrButton style={styles.modeButton} onClick={(event) => {
+                                sceneManager.eventEmitter.emit("change", {room: "B"});
+                            }}><Text>B</Text>
+                            </VrButton>
+                            <VrButton style={styles.modeButton} onClick={(event) => {
+                                sceneManager.eventEmitter.emit("change", {room: "C"});
+                            }}><Text>C</Text></VrButton>
+                        </View>
+                        }
 
                         {this.state.mode === MODE_DRAW &&
                         <View style={styles.colorsBox}>
@@ -153,62 +172,85 @@ export default class HeadLockMenu360 extends React.Component {
                         }
 
                         <View style={styles.colorsModeBox}>
-                            <VrButton
-                                style={this.state.mode === MODE_DRAW ? styles.modeButtonSelected : styles.modeButton}
+                            <View>
+                                <VrButton
+                                    style={this.state.mode === MODE_DRAW ? styles.modeButtonSelected : styles.modeButton}
 
-                                onButtonPress={() => {
-                                    browserBridgeIndex.emit("vrButtonStart", {});
-                                }}
-                                onButtonRelease={() => {
-                                    browserBridgeIndex.emit("vrButtonStop", {});
-                                }}
-                                onClick={(event) => {
-                                    this.setMode(event, MODE_DRAW)
-                                }}><Text>Draw</Text></VrButton>
-                            <VrButton
-                                style={this.state.mode === MODE_ERASE ? styles.modeButtonSelected : styles.modeButton}
-                                onButtonPress={() => {
-                                    browserBridgeIndex.emit("vrButtonStart", {});
-                                }}
-                                onButtonRelease={() => {
-                                    browserBridgeIndex.emit("vrButtonStop", {});
-                                }}
-                                onClick={(event) => {
-                                    this.setMode(event, MODE_ERASE)
-                                }}><Text>Erase</Text></VrButton>
-                            <VrButton
-                                style={this.state.mode === MODE_NOTE_CREATE ? styles.modeButtonSelected : styles.modeButton}
-                                onButtonPress={() => {
-                                    browserBridgeIndex.emit("vrButtonStart", {});
-                                }}
-                                onButtonRelease={() => {
-                                    browserBridgeIndex.emit("vrButtonStop", {});
-                                }}
-                                onClick={(event) => {
-                                    this.setMode(event, MODE_NOTE_CREATE)
-                                }}><Text>Create Note</Text></VrButton>
-                            <VrButton
-                                style={this.state.mode === MODE_NOTE_EDIT ? styles.modeButtonSelected : styles.modeButton}
-                                onButtonPress={() => {
-                                    browserBridgeIndex.emit("vrButtonStart", {});
-                                }}
-                                onButtonRelease={() => {
-                                    browserBridgeIndex.emit("vrButtonStop", {});
-                                }}
-                                onClick={(event) => {
-                                    this.setMode(event, MODE_NOTE_EDIT)
-                                }}><Text>Edit Note</Text></VrButton>
-                            <VrButton
-                                style={this.state.mode === MODE_MOVE ? styles.modeButtonSelected : styles.modeButton}
-                                onButtonPress={() => {
-                                    browserBridgeIndex.emit("vrButtonStart", {});
-                                }}
-                                onButtonRelease={() => {
-                                    browserBridgeIndex.emit("vrButtonStop", {});
-                                }}
-                                onClick={(event) => {
-                                    this.setMode(event, MODE_MOVE)
-                                }}><Text>Move</Text></VrButton>
+                                    onButtonPress={() => {
+                                        browserBridgeIndex.emit("vrButtonStart", {});
+                                    }}
+                                    onButtonRelease={() => {
+                                        browserBridgeIndex.emit("vrButtonStop", {});
+                                    }}
+                                    onClick={(event) => {
+                                        this.setState({subtext: "Use the trigger button to draw."});
+                                        this.setMode(event, MODE_DRAW)
+                                    }}><Text>Draw</Text></VrButton>
+                                <VrButton
+                                    style={this.state.mode === MODE_ERASE ? styles.modeButtonSelected : styles.modeButton}
+                                    onButtonPress={() => {
+                                        browserBridgeIndex.emit("vrButtonStart", {});
+                                    }}
+                                    onButtonRelease={() => {
+                                        browserBridgeIndex.emit("vrButtonStop", {});
+                                    }}
+                                    onClick={(event) => {
+                                        this.setState({subtext: "Use the trigger button to erase a drawing."});
+                                        this.setMode(event, MODE_ERASE)
+                                    }}><Text>Erase</Text></VrButton>
+                            </View>
+                            <View>
+                                <VrButton
+                                    style={this.state.mode === MODE_NOTE_CREATE ? styles.modeButtonSelected : styles.modeButton}
+                                    onButtonPress={() => {
+                                        browserBridgeIndex.emit("vrButtonStart", {});
+                                    }}
+                                    onButtonRelease={() => {
+                                        browserBridgeIndex.emit("vrButtonStop", {});
+                                    }}
+                                    onClick={(event) => {
+                                        this.setState({subtext: "Use the trigger button to add a note and move it. "});
+                                        this.setMode(event, MODE_NOTE_CREATE)
+                                    }}><Text>Create Note</Text></VrButton>
+                                <VrButton
+                                    style={this.state.mode === MODE_NOTE_EDIT ? styles.modeButtonSelected : styles.modeButton}
+                                    onButtonPress={() => {
+                                        browserBridgeIndex.emit("vrButtonStart", {});
+                                    }}
+                                    onButtonRelease={() => {
+                                        browserBridgeIndex.emit("vrButtonStop", {});
+                                    }}
+                                    onClick={(event) => {
+                                        this.setState({subtext: "Use the trigger button near a note to record your voice and add it to your note."});
+                                        this.setMode(event, MODE_NOTE_EDIT)
+                                    }}><Text>Edit Note</Text></VrButton>
+                            </View>
+                            <View>
+                                <VrButton
+                                    style={this.state.mode === MODE_MOVE ? styles.modeButtonSelected : styles.modeButton}
+                                    onButtonPress={() => {
+                                        browserBridgeIndex.emit("vrButtonStart", {});
+                                    }}
+                                    onButtonRelease={() => {
+                                        browserBridgeIndex.emit("vrButtonStop", {});
+                                    }}
+                                    onClick={(event) => {
+                                        this.setState({subtext: "Use the trigger button to move in direction of your head."});
+                                        this.setMode(event, MODE_MOVE)
+                                    }}><Text>Move</Text></VrButton>
+                                <VrButton
+                                    style={this.state.mode === MODE_SCENE ? styles.modeButtonSelected : styles.modeButton}
+                                    onButtonPress={() => {
+                                        browserBridgeIndex.emit("vrButtonStart", {});
+                                    }}
+                                    onButtonRelease={() => {
+                                        browserBridgeIndex.emit("vrButtonStop", {});
+                                    }}
+                                    onClick={(event) => {
+                                        this.setState({subtext: "Change the scene"});
+                                        this.setMode(event, MODE_SCENE)
+                                    }}><Text>Scene</Text></VrButton>
+                            </View>
                         </View>
                     </View>
                 }
@@ -274,112 +316,112 @@ const styles = StyleSheet.create({
         backgroundColor: '#FF0000',
         borderColor: '#639dda',
         borderWidth: 2,
-        width: 50, height: 50
+        width: 50, height: 30
     },
     redSelected: {
         padding: 20,
         backgroundColor: '#FF0000',
         borderColor: '#dacc00',
         borderWidth: 2,
-        width: 50, height: 50
+        width: 50, height: 30
     },
     green: {
         padding: 20,
         backgroundColor: '#00FF00',
         borderColor: '#639dda',
         borderWidth: 2,
-        width: 50, height: 50
+        width: 50, height: 30
     },
     greenSelected: {
         padding: 20,
         backgroundColor: '#00FF00',
         borderColor: '#dacc00',
         borderWidth: 2,
-        width: 50, height: 50
+        width: 50, height: 30
     },
     blue: {
         padding: 20,
         backgroundColor: '#0000FF',
         borderColor: '#639dda',
         borderWidth: 2,
-        width: 50, height: 50
+        width: 50, height: 30
     },
     blueSelected: {
         padding: 20,
         backgroundColor: '#0000FF',
         borderColor: '#dacc00',
         borderWidth: 2,
-        width: 50, height: 50
+        width: 50, height: 30
     },
     pink: {
         padding: 20,
         backgroundColor: '#ff00ff',
         borderColor: '#639dda',
         borderWidth: 2,
-        width: 50, height: 50
+        width: 50, height: 30
     },
     pinkSelected: {
         padding: 20,
         backgroundColor: '#ff00ff',
         borderColor: '#dacc00',
         borderWidth: 2,
-        width: 50, height: 50
+        width: 50, height: 30
     },
     cyan: {
         padding: 20,
         backgroundColor: '#00FFFF',
         borderColor: '#639dda',
         borderWidth: 2,
-        width: 50, height: 50
+        width: 50, height: 30
     },
     cyanSelected: {
         padding: 20,
         backgroundColor: '#00FFFF',
         borderColor: '#dacc00',
         borderWidth: 2,
-        width: 50, height: 50
+        width: 50, height: 30
     },
     yellow: {
         padding: 20,
         backgroundColor: '#FFFF00',
         borderColor: '#639dda',
         borderWidth: 2,
-        width: 50, height: 50
+        width: 50, height: 30
     },
     yellowSelected: {
         padding: 20,
         backgroundColor: '#FFFF00',
         borderColor: '#dacc00',
         borderWidth: 2,
-        width: 50, height: 50
+        width: 50, height: 30
     },
     white: {
         padding: 20,
         backgroundColor: '#FFFFFF',
         borderColor: '#639dda',
         borderWidth: 2,
-        width: 50, height: 50
+        width: 50, height: 30
     },
     whiteSelected: {
         padding: 20,
         backgroundColor: '#FFFFFF',
         borderColor: '#dacc00',
         borderWidth: 2,
-        width: 50, height: 50
+        width: 50, height: 30
     },
     black: {
         padding: 20,
         backgroundColor: '#000000',
         borderColor: '#639dda',
         borderWidth: 2,
-        width: 50, height: 50
+        width: 50, height: 30
     },
     blackSelected: {
         padding: 20,
         backgroundColor: '#000000',
         borderColor: '#dacc00',
         borderWidth: 2,
-        width: 50, height: 50
+        width: 50, height: 30
     },
     greeting: {
         fontSize: 30,

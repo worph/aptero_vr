@@ -5,9 +5,9 @@ import Entity from 'Entity';
 const Env = props => {
   return (
     <View>
-        <AmbientLight intensity={ 0.0 } />
+        <AmbientLight intensity={ 0.2 } />
         <PointLight
-            intensity={0.1}
+            intensity={0.7}
             style={{transform: [{translate: [0, 4, -1]}]}}
             shadow={{
                 cast: true,

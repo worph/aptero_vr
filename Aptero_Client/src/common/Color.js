@@ -16,3 +16,4 @@ export const MODE_NOTE = "note";
 export const MODE_MOVE = "MOVE";
 export const MODE_NOTE_CREATE = "create";
 export const MODE_NOTE_EDIT = "edit";
+export const MODE_SCENE = "scene";
