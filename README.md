@@ -10,8 +10,10 @@ We made a whole innovative tutorial that help fellow developers build with Faceb
 Here's the tutorial and commented code!
 https://github.com/worph/aptero_vr/blob/master/TUTO.md
 
+
 # Aptero VR
 ![Aptero](https://hub.aptero.co/data/data/Cedric/facebook/facebook.JPG)
+
 A collaborative VR space for creative meeting with 3d sketch made with react360.  
 The app is composed of a client (Aptero_Client) and a server (Aptero_Server).  
 
