@@ -1,4 +1,4 @@
-# How to realize a Client Server application using React360 and express
+# How to realize a Client Server application using React, React360 and express
 
 ## Setting of express
 
